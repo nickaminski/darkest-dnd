@@ -1,4 +1,3 @@
-import { Camera } from "../entity/camera";
 import { Tile } from "../level/tile/tile";
 
 export class DrawContext {
@@ -63,13 +62,26 @@ export class DrawContext {
         this.updateScale(this.scale);
     }
 
-    drawTile(tilex: number, tiley: number, width: number, height: number, tileHex: string){
+    drawTile(tilex: number, tiley: number, width: number, height: number, tileHex: string, brightness: number){
         this.ctx.save();
         if (tileHex == '000000ff') {
             this.ctx.fillStyle = `#${tileHex}`;
             this.ctx.fillRect((tilex << Tile.TileSizeShift), (tiley << Tile.TileSizeShift), width, height);
         } else if (tileHex == 'ffffffff') {
-            this.ctx.strokeRect((tilex << Tile.TileSizeShift), (tiley << Tile.TileSizeShift), width, height);
+            if (brightness <= -1) {
+                this.ctx.fillStyle = `#000000ff`;
+                this.ctx.fillRect((tilex << Tile.TileSizeShift), (tiley << Tile.TileSizeShift), width, height);
+            } else if (brightness <= 0) {
+                this.ctx.fillStyle = `#3d3d3dff`;
+                this.ctx.fillRect((tilex << Tile.TileSizeShift), (tiley << Tile.TileSizeShift), width, height);
+                this.ctx.strokeRect((tilex << Tile.TileSizeShift), (tiley << Tile.TileSizeShift), width, height);
+            } else if (brightness <= 0.5) {
+                this.ctx.strokeRect((tilex << Tile.TileSizeShift), (tiley << Tile.TileSizeShift), width, height);
+                this.ctx.fillStyle = `#757575ff`;
+                this.ctx.fillRect((tilex << Tile.TileSizeShift), (tiley << Tile.TileSizeShift), width, height);
+            } else {
+                this.ctx.strokeRect((tilex << Tile.TileSizeShift), (tiley << Tile.TileSizeShift), width, height);
+            } 
         }
         this.ctx.restore();
     }

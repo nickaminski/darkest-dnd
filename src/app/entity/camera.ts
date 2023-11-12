@@ -1,5 +1,6 @@
 import { DrawContext } from "../graphics/DrawContext";
 import { Keyboard } from "../input/keyboard";
+import { Level } from "../level/level";
 
 export class Camera {
     #x: number;
@@ -24,22 +25,26 @@ export class Camera {
         this.#y = 0;
     }
 
-    update(delta: number) {
+    update(delta: number, level: Level) {
         if (this.input.moveUp) {
             this.#y += this.speed * delta;
             this.screen.updateTransform(this.#x, this.#y);
+            level.needsRedraw = true;
         }
         if (this.input.moveDown) {
             this.#y -= this.speed * delta;
             this.screen.updateTransform(this.#x, this.#y);
+            level.needsRedraw = true;
         }
         if (this.input.moveLeft) {
             this.#x += this.speed * delta;
             this.screen.updateTransform(this.#x, this.#y);
+            level.needsRedraw = true;
         }
         if (this.input.moveRight) {
             this.#x -= this.speed * delta;
             this.screen.updateTransform(this.#x, this.#y);
+            level.needsRedraw = true;
         }
     }
 

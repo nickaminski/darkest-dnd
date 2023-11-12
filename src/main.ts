@@ -19,6 +19,7 @@ window.addEventListener('load', function(){
         game.height = canvas.height;
         game.screen.updateScale(game.screen.scale);
         game.screen.updateTransform(game.screen.transformX, game.screen.transformY);
+        game.level.needsRedraw = true;
     });
 
     function gameLoop(): void {

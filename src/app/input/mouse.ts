@@ -1,5 +1,5 @@
-import { Camera } from "../entity/camera";
 import { DrawContext } from "../graphics/DrawContext";
+import { Level } from "../level/level";
 
 export class Mouse {
     #x: number = 0;
@@ -23,14 +23,15 @@ export class Mouse {
         this.#y = newVal;
     }
 
-    public onMouseMove(e: MouseEvent) {
+    public onMouseMove(e: MouseEvent, level: Level) {
         this.x = e.clientX;
         this.y = e.clientY;
+        level.needsRedraw = true;
     }
 
-    public onMouseWheel(e: WheelEvent, drawContext: DrawContext) {
-        const oldScale = drawContext.scale;
+    public onMouseWheel(e: WheelEvent, drawContext: DrawContext, level: Level) {
         const scrollChange = e.deltaY * this.mouseWheelSensitivity;
         drawContext.mouseWheelScroll(scrollChange);
+        level.needsRedraw = true;
     }
 }

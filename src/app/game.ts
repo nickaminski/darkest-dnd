@@ -41,9 +41,10 @@ export class Game {
         this.keyboard = new Keyboard();
         this.camera = new Camera(this.keyboard, this.screen);
         this.level = new Level(levelImage, this.camera, this.mouse);
-        this.level.addDrawable(new Player(3 * Tile.TileSize, 3 * Tile.TileSize, playerImage));
-        document.addEventListener('mousemove', (e) => this.mouse.onMouseMove(e));
-        document.addEventListener('wheel', (e) => this.mouse.onMouseWheel(e, this.screen));
+        var player = new Player(10 * Tile.TileSize, 10 * Tile.TileSize, playerImage);
+        this.level.addEntity(player);
+        document.addEventListener('mousemove', (e) => this.mouse.onMouseMove(e, this.level));
+        document.addEventListener('wheel', (e) => this.mouse.onMouseWheel(e, this.screen, this.level));
         document.addEventListener('keydown', (e) => this.keyboard.onKeyDown(e));
         document.addEventListener('keyup', (e) => this.keyboard.onKeyUp(e));
     }
@@ -53,7 +54,6 @@ export class Game {
     }
 
     render(): void {
-        this.screen.clear();
         this.level.render(this.screen);
     }
 
