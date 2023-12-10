@@ -1,5 +1,3 @@
-import { Level } from "../level/level";
-
 export class Keyboard {
 
     keys = new Map<string, boolean>();

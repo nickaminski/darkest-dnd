@@ -1,4 +1,4 @@
-import { DrawContext } from "../graphics/DrawContext";
+import { DrawContext } from "../graphics/drawContext";
 import { Tile } from "../level/tile/tile";
 import { Entity } from "./entity";
 
@@ -17,8 +17,7 @@ export class Player implements Entity {
         this.image.src = imgSrc;
     }
 
-    update(delta: number, brightnessMap: number[][], explorationMap: boolean[][]) {
-        this.calculateVision(brightnessMap, explorationMap);
+    update(delta: number) {
     }
 
     calculateVision(brightnessMap: number[][], explorationMap: boolean[][]) {
@@ -30,15 +29,15 @@ export class Player implements Entity {
                 var tileX = (this.pixelx >> Tile.TileSizeShift) + x;
                 if (tileX < 0 || tileX >= brightnessMap[0].length) continue;
                 
-                if (Math.abs(y) + Math.abs(x) <= this.radiantLight) brightnessMap[tileY][tileX] = 1;
-                else if (Math.abs(y) + Math.abs(x) <= this.radiantLight + this.dimLight) brightnessMap[tileY][tileX] = 0.5;
+                if (Math.abs(y) + Math.abs(x) <= this.radiantLight) brightnessMap[tileX][tileY] = 100;
+                else if (Math.abs(y) + Math.abs(x) <= this.radiantLight + this.dimLight) brightnessMap[tileX][tileY] = 50;
 
-                explorationMap[tileY][tileX] = true;
+                explorationMap[tileX][tileY] = true;
             }
         }
     }
 
-    render(screen: DrawContext) {
-        screen.drawImage(this.pixelx, this.pixely, this.image, Tile.TileSize, Tile.TileSize);
+    render(drawCtx: DrawContext) {
+        drawCtx.drawImage(this.pixelx, this.pixely, this.image, Tile.TileSize, Tile.TileSize);
     }
 }

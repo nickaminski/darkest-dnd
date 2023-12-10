@@ -40,7 +40,8 @@ export class DrawContext {
     clear() {
         this.#ctx.save();
         this.#ctx.setTransform(1, 0, 0, 1, 0 ,0);
-        this.#ctx.clearRect(0, 0, this.width, this.height);
+        this.#ctx.fillStyle = 'ffffff';
+        this.#ctx.fillRect(0, 0, this.width, this.height);
         this.#ctx.restore();
     }
 
@@ -68,19 +69,21 @@ export class DrawContext {
             this.ctx.fillStyle = `#${tileHex}`;
             this.ctx.fillRect((tilex << Tile.TileSizeShift), (tiley << Tile.TileSizeShift), width, height);
         } else if (tileHex == 'ffffffff') {
-            if (brightness <= -1) {
+            if (brightness <= 0) {
                 this.ctx.fillStyle = `#000000ff`;
                 this.ctx.fillRect((tilex << Tile.TileSizeShift), (tiley << Tile.TileSizeShift), width, height);
-            } else if (brightness <= 0) {
+            } else if (brightness <= 25) {
                 this.ctx.fillStyle = `#3d3d3dff`;
                 this.ctx.fillRect((tilex << Tile.TileSizeShift), (tiley << Tile.TileSizeShift), width, height);
                 this.ctx.strokeRect((tilex << Tile.TileSizeShift), (tiley << Tile.TileSizeShift), width, height);
-            } else if (brightness <= 0.5) {
+            } else if (brightness <= 50) {
                 this.ctx.strokeRect((tilex << Tile.TileSizeShift), (tiley << Tile.TileSizeShift), width, height);
                 this.ctx.fillStyle = `#757575ff`;
                 this.ctx.fillRect((tilex << Tile.TileSizeShift), (tiley << Tile.TileSizeShift), width, height);
             } else {
                 this.ctx.strokeRect((tilex << Tile.TileSizeShift), (tiley << Tile.TileSizeShift), width, height);
+                this.ctx.fillStyle = `#ffffffff`;
+                this.ctx.fillRect((tilex << Tile.TileSizeShift), (tiley << Tile.TileSizeShift), width, height);
             } 
         }
         this.ctx.restore();

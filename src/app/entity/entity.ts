@@ -1,6 +1,6 @@
-import { DrawContext } from "../graphics/DrawContext";
+import { DrawContext } from "../graphics/drawContext";
 
 export interface Entity {
     render(ctx: DrawContext): void;
-    update(delta: number, brightnessMap: number[][], explorationMap: boolean[][]): void;
+    update(delta: number): void;
 }

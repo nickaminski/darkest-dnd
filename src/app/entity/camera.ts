@@ -1,4 +1,4 @@
-import { DrawContext } from "../graphics/DrawContext";
+import { DrawContext } from "../graphics/drawContext";
 import { Keyboard } from "../input/keyboard";
 import { Level } from "../level/level";
 

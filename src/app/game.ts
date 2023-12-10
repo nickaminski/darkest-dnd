@@ -1,4 +1,4 @@
-import { DrawContext } from './graphics/DrawContext';
+import { DrawContext } from './graphics/drawContext';
 import { Mouse } from './input/mouse';
 import { Level } from './level/level';
 import { Keyboard } from './input/keyboard';
@@ -41,7 +41,7 @@ export class Game {
         this.keyboard = new Keyboard();
         this.camera = new Camera(this.keyboard, this.screen);
         this.level = new Level(levelImage, this.camera, this.mouse);
-        var player = new Player(10 * Tile.TileSize, 10 * Tile.TileSize, playerImage);
+        var player = new Player(10 * Tile.TileSize, 15 * Tile.TileSize, playerImage);
         this.level.addEntity(player);
         document.addEventListener('mousemove', (e) => this.mouse.onMouseMove(e, this.level));
         document.addEventListener('wheel', (e) => this.mouse.onMouseWheel(e, this.screen, this.level));

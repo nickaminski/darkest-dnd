@@ -1,6 +1,7 @@
 import { Camera } from "../entity/camera";
 import { Entity } from "../entity/entity";
-import { DrawContext } from "../graphics/DrawContext";
+import { Player } from "../entity/player";
+import { DrawContext } from "../graphics/drawContext";
 import { Mouse } from "../input/mouse";
 import { Tile } from "./tile/tile";
 
@@ -14,6 +15,7 @@ export class Level {
     entities: Entity[];
     brightnessMap: number[][];
     explorationMap: boolean[][];
+    solidWallsMap: boolean[][];
     needsRedraw: boolean = false;
 
     DEBUG_USE_BRIGHTNESS = true;
@@ -29,8 +31,9 @@ export class Level {
             this.width = loadedImage.width;
             this.height = loadedImage.height;
 
-            this.brightnessMap = new Array(this.height).fill(-1).map(() => new Array(this.width).fill(-1));
-            this.explorationMap = new Array(this.height).fill(false).map(() => new Array(this.width).fill(false));
+            this.brightnessMap = new Array(this.height).fill(0).map(() => new Array(this.width).fill(0));
+            this.explorationMap = new Array(this.height).fill(true).map(() => new Array(this.width).fill(true));
+            this.solidWallsMap = new Array(this.height).fill(false).map(() => new Array(this.width).fill(false));
 
             var virtualCanvas = document.createElement('canvas');
             var context = virtualCanvas.getContext('2d');
@@ -41,30 +44,41 @@ export class Level {
                 var g = pixelData[i*4+1].toString(16).padStart(2, '0');
                 var b = pixelData[i*4+2].toString(16).padStart(2, '0');
                 var a = pixelData[i*4+3].toString(16).padStart(2, '0');
-                this.pixelHexValues.push(`${r}${g}${b}${a}`);
+                const hexValue = `${r}${g}${b}${a}`
+                this.pixelHexValues.push(hexValue);
             }
-            
+
+            for (var i = 0; i < this.pixelHexValues.length; i++) {
+                if (this.pixelHexValues[i] == '000000ff') {
+                    this.solidWallsMap[Math.floor(i/this.width)][i%this.height] = true;
+                }
+            }
+
             this.loaded = true;
             this.needsRedraw = true;
+
+            this.entities.forEach(e => {
+                if (e instanceof Player) {
+                    e.calculateVision(this.brightnessMap, this.explorationMap);
+                }
+            });
         }
     }
 
     addEntity(e: Entity) {
         this.entities.push(e);
+
+        if (e instanceof Player && this.loaded) {
+            e.calculateVision(this.brightnessMap, this.explorationMap);
+        }
     }
 
     update(delta: number) {
         if (!this.loaded) return;
 
-        for(var y = 0; y < this.height; y++) {
-            for (var x = 0; x < this.width; x++) {
-                this.brightnessMap[y][x] = -1;
-            }
-        }
-
         this.camera.update(delta, this);
 
-        this.entities.forEach(e => e.update(delta, this.brightnessMap, this.explorationMap));
+        this.entities.forEach(e => e.update(delta));
     }
 
     render(screen: DrawContext) {
@@ -103,7 +117,11 @@ export class Level {
     getBrightness(x: number, y: number): number {
         if (!this.DEBUG_USE_BRIGHTNESS) return 1;
 
-        if (x < 0 || x >= this.width || y < 0 || y >= this.height) return -1;
+        if (x < 0 || x >= this.width || y < 0 || y >= this.height) return 0;
+
+        if (this.explorationMap[x][y] && this.brightnessMap[x][y] < 25) 
+            return 25;
+
         return this.brightnessMap[x][y];
     }
 }

@@ -1,4 +1,4 @@
-import { DrawContext } from "../graphics/DrawContext";
+import { DrawContext } from "../graphics/drawContext";
 import { Level } from "../level/level";
 
 export class Mouse {

@@ -1,5 +1,3 @@
-import { DrawContext } from "../../graphics/DrawContext";
-
 export class Tile {
 
     public static get TileSize(): number {
