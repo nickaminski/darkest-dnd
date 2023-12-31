@@ -7,7 +7,7 @@ export class Player implements Entity {
     pixely: number;
     image: HTMLImageElement;
 
-    radiantLight = 4;
+    radiantLight = 5;
     dimLight = 4;
 
     constructor(startX: number, startY: number, imgSrc: any) {
@@ -20,24 +20,30 @@ export class Player implements Entity {
     update(delta: number) {
     }
 
-    calculateVision(brightnessMap: number[][], explorationMap: boolean[][]) {
-        const lightRadius = this.radiantLight + this.dimLight
-        for(var y = -lightRadius; y < lightRadius + 1; y++) {
-            var tileY = (this.pixely >> Tile.TileSizeShift) + y;
-            if (tileY < 0 || tileY >= brightnessMap.length) continue;
-            for (var x = -lightRadius; x < lightRadius + 1; x++) {
-                var tileX = (this.pixelx >> Tile.TileSizeShift) + x;
-                if (tileX < 0 || tileX >= brightnessMap[0].length) continue;
-                
-                if (Math.abs(y) + Math.abs(x) <= this.radiantLight) brightnessMap[tileX][tileY] = 100;
-                else if (Math.abs(y) + Math.abs(x) <= this.radiantLight + this.dimLight) brightnessMap[tileX][tileY] = 50;
-
-                explorationMap[tileX][tileY] = true;
-            }
-        }
-    }
-
     render(drawCtx: DrawContext) {
         drawCtx.drawImage(this.pixelx, this.pixely, this.image, Tile.TileSize, Tile.TileSize);
     }
+
+    calculateVision(brightnessMap: number[][], explorationMap: boolean[][], solidWallsMap: boolean[][]) {
+        var tileX = (this.pixelx >> Tile.TileSizeShift);
+        var tileY = (this.pixely >> Tile.TileSizeShift);
+        this.floodVision(0, tileY, tileX, brightnessMap, explorationMap, solidWallsMap);
+    }
+
+    private floodVision(lightStep: number, tileX: number, tileY: number, brightnessMap: number[][], explorationMap: boolean[][], solidWallsMap: boolean[][]) {
+        if (tileX < 0 || tileY < 0 || tileX >= brightnessMap.length || tileY >= brightnessMap[0].length) return;
+        if (solidWallsMap[tileX][tileY]) return;
+        if (lightStep == this.dimLight + this.radiantLight) return;
+    
+        if (lightStep < this.radiantLight) brightnessMap[tileX][tileY] = 100;
+        else if (lightStep < this.radiantLight + this.dimLight && brightnessMap[tileX][tileY] < 50) brightnessMap[tileX][tileY] = 50;
+    
+        explorationMap[tileX][tileY] = true;
+    
+        this.floodVision(lightStep + 1, tileX - 1, tileY, brightnessMap, explorationMap, solidWallsMap);
+        this.floodVision(lightStep + 1, tileX + 1, tileY, brightnessMap, explorationMap, solidWallsMap);
+        this.floodVision(lightStep + 1, tileX, tileY - 1, brightnessMap, explorationMap, solidWallsMap);
+        this.floodVision(lightStep + 1, tileX, tileY + 1, brightnessMap, explorationMap, solidWallsMap);
+    }
+
 }

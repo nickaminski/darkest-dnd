@@ -50,16 +50,15 @@ export class Level {
 
             for (var i = 0; i < this.pixelHexValues.length; i++) {
                 if (this.pixelHexValues[i] == '000000ff') {
-                    this.solidWallsMap[Math.floor(i/this.width)][i%this.height] = true;
+                    this.solidWallsMap[Math.floor(i/this.width)][i%this.width] = true;
                 }
             }
-
             this.loaded = true;
             this.needsRedraw = true;
-
+            
             this.entities.forEach(e => {
                 if (e instanceof Player) {
-                    e.calculateVision(this.brightnessMap, this.explorationMap);
+                    e.calculateVision(this.brightnessMap, this.explorationMap, this.solidWallsMap);
                 }
             });
         }
@@ -69,7 +68,7 @@ export class Level {
         this.entities.push(e);
 
         if (e instanceof Player && this.loaded) {
-            e.calculateVision(this.brightnessMap, this.explorationMap);
+            e.calculateVision(this.brightnessMap, this.explorationMap, this.solidWallsMap);
         }
     }
 
@@ -81,43 +80,43 @@ export class Level {
         this.entities.forEach(e => e.update(delta));
     }
 
-    render(screen: DrawContext) {
+    render(drawContext: DrawContext) {
         if (!this.loaded || !this.needsRedraw) return;
-        screen.clear();
+        drawContext.clear();
 
         // get into tile coordinates for tile drawing
-        const x0 = (-screen.transformX / screen.scale) >> Tile.TileSizeShift;
-        const y0 = (-screen.transformY / screen.scale) >> Tile.TileSizeShift;
-        const x1 = ((-screen.transformX + screen.width + Tile.TileSize * 2) / screen.scale) >> Tile.TileSizeShift;
-        const y1 = ((-screen.transformY + screen.height + Tile.TileSize * 2) / screen.scale) >> Tile.TileSizeShift;
+        const x0 = (-drawContext.transformX / drawContext.scale) >> Tile.TileSizeShift;
+        const y0 = (-drawContext.transformY / drawContext.scale) >> Tile.TileSizeShift;
+        const x1 = ((-drawContext.transformX + drawContext.width + Tile.TileSize * 2) / drawContext.scale) >> Tile.TileSizeShift;
+        const y1 = ((-drawContext.transformY + drawContext.height + Tile.TileSize * 2) / drawContext.scale) >> Tile.TileSizeShift;
 
         for (var y = y0; y < y1; y++) {
             for (var x = x0; x < x1; x++) {
-                screen.drawTile(x, y, Tile.TileSize, Tile.TileSize, this.getTile(x, y), this.getBrightness(x, y));
+                drawContext.drawTile(x, y, Tile.TileSize, Tile.TileSize, this.getTile(y, x), this.getBrightness(y, x));
             }
         }
 
-        this.entities.forEach(e => e.render(screen));
+        this.entities.forEach(e => e.render(drawContext));
 
-        screen.ctx.save();
-        screen.ctx.resetTransform();
-        screen.ctx.fillStyle = 'blue';
-        screen.ctx.font = "30px Arial";
-        screen.ctx.fillText(`Tile offset: ${x0}, ${y0}`, 10, 50);
-        screen.ctx.fillText(`Hover tile: ${((this.mouse.x - screen.transformX) / screen.scale) >> Tile.TileSizeShift}, ${((this.mouse.y - screen.transformY) / screen.scale) >> Tile.TileSizeShift}`, 10, 100);
-        screen.ctx.restore();
+        drawContext.ctx.save();
+        drawContext.ctx.resetTransform();
+        drawContext.ctx.fillStyle = 'blue';
+        drawContext.ctx.font = "30px Arial";
+        drawContext.ctx.fillText(`Tile offset: ${x0}, ${y0}`, 10, 50);
+        drawContext.ctx.fillText(`Hover tile: ${((this.mouse.x - drawContext.transformX) / drawContext.scale) >> Tile.TileSizeShift}, ${((this.mouse.y - drawContext.transformY) / drawContext.scale) >> Tile.TileSizeShift}`, 10, 100);
+        drawContext.ctx.restore();
         this.needsRedraw = false;
     }
 
     getTile(x: number, y: number): string {
-        if (x < 0 || x >= this.width || y < 0 || y >= this.height) return '-1';
-        return this.pixelHexValues[x + y * this.width];
+        if (x < 0 || x >= this.height || y < 0 || y >= this.width) return '-1';
+        return this.pixelHexValues[y + x * this.width];
     }
 
     getBrightness(x: number, y: number): number {
         if (!this.DEBUG_USE_BRIGHTNESS) return 1;
 
-        if (x < 0 || x >= this.width || y < 0 || y >= this.height) return 0;
+        if (x < 0 || x >= this.height || y < 0 || y >= this.width) return 0;
 
         if (this.explorationMap[x][y] && this.brightnessMap[x][y] < 25) 
             return 25;
