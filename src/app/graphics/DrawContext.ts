@@ -67,23 +67,23 @@ export class DrawContext {
         this.ctx.save();
         if (tileHex == '000000ff') {
             this.ctx.fillStyle = `#${tileHex}`;
-            this.ctx.fillRect((tileRow << Tile.TileSizeShift), (tileCol << Tile.TileSizeShift), width, height);
+            this.ctx.fillRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
         } else if (tileHex == 'ffffffff') {
             if (brightness <= 0) {
                 this.ctx.fillStyle = `#000000ff`;
-                this.ctx.fillRect((tileRow << Tile.TileSizeShift), (tileCol << Tile.TileSizeShift), width, height);
+                this.ctx.fillRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
             } else if (brightness <= 25) {
                 this.ctx.fillStyle = `#3d3d3dff`;
-                this.ctx.fillRect((tileRow << Tile.TileSizeShift), (tileCol << Tile.TileSizeShift), width, height);
-                this.ctx.strokeRect((tileRow << Tile.TileSizeShift), (tileCol << Tile.TileSizeShift), width, height);
+                this.ctx.fillRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
+                this.ctx.strokeRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
             } else if (brightness <= 50) {
-                this.ctx.strokeRect((tileRow << Tile.TileSizeShift), (tileCol << Tile.TileSizeShift), width, height);
+                this.ctx.strokeRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
                 this.ctx.fillStyle = `#757575ff`;
-                this.ctx.fillRect((tileRow << Tile.TileSizeShift), (tileCol << Tile.TileSizeShift), width, height);
+                this.ctx.fillRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
             } else {
-                this.ctx.strokeRect((tileRow << Tile.TileSizeShift), (tileCol << Tile.TileSizeShift), width, height);
+                this.ctx.strokeRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
                 this.ctx.fillStyle = `#ffffffff`;
-                this.ctx.fillRect((tileRow << Tile.TileSizeShift), (tileCol << Tile.TileSizeShift), width, height);
+                this.ctx.fillRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
             } 
         }
         this.ctx.restore();

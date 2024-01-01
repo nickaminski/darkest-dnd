@@ -92,7 +92,7 @@ export class Level {
 
         for (var y = y0; y < y1; y++) {
             for (var x = x0; x < x1; x++) {
-                drawContext.drawTile(x, y, Tile.TileSize, Tile.TileSize, this.getTile(y, x), this.getBrightness(y, x));
+                drawContext.drawTile(y, x, Tile.TileSize, Tile.TileSize, this.getTile(y, x), this.getBrightness(y, x));
             }
         }
 
@@ -108,19 +108,19 @@ export class Level {
         this.needsRedraw = false;
     }
 
-    getTile(x: number, y: number): string {
-        if (x < 0 || x >= this.height || y < 0 || y >= this.width) return '-1';
-        return this.pixelHexValues[y + x * this.width];
+    getTile(y: number, x: number): string {
+        if (y < 0 || y >= this.height || x < 0 || x >= this.width) return '-1';
+        return this.pixelHexValues[x + y * this.width];
     }
 
-    getBrightness(x: number, y: number): number {
+    getBrightness(y: number, x: number): number {
         if (!this.DEBUG_USE_BRIGHTNESS) return 1;
 
-        if (x < 0 || x >= this.height || y < 0 || y >= this.width) return 0;
+        if (y < 0 || y >= this.height || x < 0 || x >= this.width) return 0;
 
-        if (this.explorationMap[x][y] && this.brightnessMap[x][y] < 25) 
+        if (this.explorationMap[y][x] && this.brightnessMap[y][x] < 25) 
             return 25;
 
-        return this.brightnessMap[x][y];
+        return this.brightnessMap[y][x];
     }
 }
