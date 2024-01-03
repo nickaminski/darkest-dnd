@@ -14,7 +14,7 @@ export class Game {
     running: boolean = false;
     #width: number;
     #height: number;
-    screen: DrawContext;
+    drawCtx: DrawContext;
     level: Level;
     keyboard: Keyboard;
     mouse: Mouse;
@@ -22,32 +22,32 @@ export class Game {
 
     public set width(newVal: number) {
         this.#width = newVal;
-        this.screen!.width = newVal;
+        this.drawCtx.width = newVal;
     }
 
     public set height(newVal: number) {
         this.#height = newVal;
-        this.screen!.height = newVal;
+        this.drawCtx.height = newVal;
     }
 
     constructor(canvas: HTMLCanvasElement) {
         var ctx = canvas.getContext('2d');
         if (ctx == null) throw new DOMException('Could not get rendering context');
         
-        this.screen = new DrawContext(ctx, canvas.width, canvas.height);
-        this.screen.updateTransform(0, 0);
+        this.drawCtx = new DrawContext(ctx, canvas.width, canvas.height);
+        this.drawCtx.updateTransform(0, 0);
         this.width = canvas.width;
         this.height = canvas.height;
         this.mouse = new Mouse();
         this.keyboard = new Keyboard();
-        this.camera = new Camera(this.keyboard, this.screen);
+        this.camera = new Camera(this.keyboard, this.drawCtx);
         this.level = new Level(levelImage, this.camera, this.mouse);
-        var player = new Player(11 * Tile.TileSize, 33 * Tile.TileSize, playerImage);
-        var player2 = new Player(18 * Tile.TileSize, 37 * Tile.TileSize, player2Image);
+        var player = new Player(7 * Tile.TileSize, 7 * Tile.TileSize, player2Image, true);
+        var player2 = new Player(5 * Tile.TileSize, 5 * Tile.TileSize, playerImage, false);
         this.level.addEntity(player);
         this.level.addEntity(player2);
         document.addEventListener('mousemove', (e) => this.mouse.onMouseMove(e, this.level));
-        document.addEventListener('wheel', (e) => this.mouse.onMouseWheel(e, this.screen, this.level));
+        document.addEventListener('wheel', (e) => this.mouse.onMouseWheel(e, this.drawCtx, this.level));
         document.addEventListener('keydown', (e) => this.keyboard.onKeyDown(e));
         document.addEventListener('keyup', (e) => this.keyboard.onKeyUp(e));
     }
@@ -57,7 +57,7 @@ export class Game {
     }
 
     render(): void {
-        this.level.render(this.screen);
+        this.level.render(this.drawCtx);
     }
 
     start(): void {

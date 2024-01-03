@@ -17,8 +17,8 @@ window.addEventListener('load', function(){
         canvas.height = window.innerHeight;
         game.width = canvas.width;
         game.height = canvas.height;
-        game.screen.updateScale(game.screen.scale);
-        game.screen.updateTransform(game.screen.transformX, game.screen.transformY);
+        game.drawCtx.updateScale(game.drawCtx.scale);
+        game.drawCtx.updateTransform(game.drawCtx.transformX, game.drawCtx.transformY);
         game.level.needsRedraw = true;
     });
 

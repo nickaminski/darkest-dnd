@@ -1,3 +1,4 @@
+import { PathfindingNode } from "../level/pathfindingNode";
 import { Tile } from "../level/tile/tile";
 
 export class DrawContext {
@@ -91,6 +92,23 @@ export class DrawContext {
 
     drawImage(pixelx: number, pixely: number, image: HTMLImageElement, width: number, height: number) {
         this.ctx.drawImage(image, pixelx, pixely, width, height);
+    }
+
+    drawPath(path: PathfindingNode[]) {
+        if (!path || path.length < 2) return;
+
+        this.ctx.save();
+        this.ctx.strokeStyle = `#ff00ffff`;
+        this.ctx.lineWidth = 3;
+        this.ctx.beginPath();
+
+        this.ctx.moveTo((path[0].tileCol << Tile.TileSizeShift) + Tile.TileSize / 2, (path[0].tileRow << Tile.TileSizeShift) + Tile.TileSize / 2);
+        for(var i = 1; i < path.length; i++)
+            this.ctx.lineTo((path[i].tileCol << Tile.TileSizeShift) + Tile.TileSize / 2, (path[i].tileRow << Tile.TileSizeShift) + Tile.TileSize / 2);
+
+        this.ctx.stroke();
+
+        this.ctx.restore();
     }
     
 }

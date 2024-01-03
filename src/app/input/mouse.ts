@@ -5,7 +5,7 @@ export class Mouse {
     #x: number = 0;
     #y: number = 0;
 
-    mouseWheelSensitivity = 0.001;
+    mouseWheelSensitivity = 0.0003;
 
     public get x(): number {
         return this.#x;
@@ -27,6 +27,7 @@ export class Mouse {
         this.x = e.clientX;
         this.y = e.clientY;
         level.needsRedraw = true;
+        level.recalculateMousePath = true;
     }
 
     public onMouseWheel(e: WheelEvent, drawContext: DrawContext, level: Level) {

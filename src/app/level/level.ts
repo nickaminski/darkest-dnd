@@ -3,6 +3,7 @@ import { Entity } from "../entity/entity";
 import { Player } from "../entity/player";
 import { DrawContext } from "../graphics/drawContext";
 import { Mouse } from "../input/mouse";
+import { PathfindingNode } from "./pathfindingNode";
 import { Tile } from "./tile/tile";
 
 export class Level {
@@ -12,17 +13,21 @@ export class Level {
     loaded: boolean = false;
     camera: Camera;
     mouse: Mouse;
+    mousePath: PathfindingNode[];
+    mouseTileCol: number;
+    mouseTileRow: number;
     entities: Entity[];
-    brightnessMap: number[][];
-    explorationMap: boolean[][];
-    solidWallsMap: boolean[][];
+    tileMap: Tile[][];
     needsRedraw: boolean = false;
+    recalculateMousePath: boolean = false;
 
     DEBUG_USE_BRIGHTNESS = true;
+    DEBUG_SHOW_TILE_LOC = true;
 
     constructor(imageRef: any, camera: Camera, mouse: Mouse) {
         this.pixelHexValues = [];
         this.entities = [];
+        this.tileMap = [];
         this.camera = camera;
         this.mouse = mouse;
         var loadedImage = new Image();
@@ -30,10 +35,6 @@ export class Level {
         loadedImage.onload = () => {
             this.width = loadedImage.width;
             this.height = loadedImage.height;
-
-            this.brightnessMap = new Array(this.height).fill(0).map(() => new Array(this.width).fill(0));
-            this.explorationMap = new Array(this.height).fill(true).map(() => new Array(this.width).fill(true));
-            this.solidWallsMap = new Array(this.height).fill(false).map(() => new Array(this.width).fill(false));
 
             var virtualCanvas = document.createElement('canvas');
             var context = virtualCanvas.getContext('2d');
@@ -44,21 +45,32 @@ export class Level {
                 var g = pixelData[i*4+1].toString(16).padStart(2, '0');
                 var b = pixelData[i*4+2].toString(16).padStart(2, '0');
                 var a = pixelData[i*4+3].toString(16).padStart(2, '0');
-                const hexValue = `${r}${g}${b}${a}`
+                const hexValue = `${r}${g}${b}${a}`;
                 this.pixelHexValues.push(hexValue);
             }
 
             for (var i = 0; i < this.pixelHexValues.length; i++) {
+                var row = Math.floor(i/this.width);
+                var col = i%this.width;
+                var newTile = new Tile(row, col);
+
+                if (!this.tileMap[row]) this.tileMap[row] = [];
+
+                newTile.brightness = 0;
+                newTile.explored = true;
+
                 if (this.pixelHexValues[i] == '000000ff') {
-                    this.solidWallsMap[Math.floor(i/this.width)][i%this.width] = true;
+                    newTile.isSolid = true;
                 }
+
+                this.tileMap[row][col] = newTile;
             }
             this.loaded = true;
             this.needsRedraw = true;
             
             this.entities.forEach(e => {
                 if (e instanceof Player) {
-                    e.calculateVision(this.brightnessMap, this.explorationMap, this.solidWallsMap);
+                    e.calculateVision(this.tileMap);
                 }
             });
         }
@@ -68,7 +80,7 @@ export class Level {
         this.entities.push(e);
 
         if (e instanceof Player && this.loaded) {
-            e.calculateVision(this.brightnessMap, this.explorationMap, this.solidWallsMap);
+            e.calculateVision(this.tileMap);
         }
     }
 
@@ -78,6 +90,13 @@ export class Level {
         this.camera.update(delta, this);
 
         this.entities.forEach(e => e.update(delta));
+
+        if (this.recalculateMousePath)
+        {
+            var pov = this.entities.find(x => x instanceof Player && x.pov) as Player;
+            this.mousePath = this.findPath(pov.pixelx >> Tile.TileSizeShift, pov.pixely >> Tile.TileSizeShift, this.mouseTileRow, this.mouseTileCol);
+            this.recalculateMousePath = false;
+        }
     }
 
     render(drawContext: DrawContext) {
@@ -92,23 +111,36 @@ export class Level {
 
         for (var y = y0; y < y1; y++) {
             for (var x = x0; x < x1; x++) {
-                drawContext.drawTile(y, x, Tile.TileSize, Tile.TileSize, this.getTile(y, x), this.getBrightness(y, x));
+                drawContext.drawTile(y, x, Tile.TileSize, Tile.TileSize, this.getTileHex(y, x), this.getBrightness(y, x));
             }
         }
 
         this.entities.forEach(e => e.render(drawContext));
 
-        drawContext.ctx.save();
-        drawContext.ctx.resetTransform();
-        drawContext.ctx.fillStyle = 'blue';
-        drawContext.ctx.font = "30px Arial";
-        drawContext.ctx.fillText(`Tile offset: ${x0}, ${y0}`, 10, 50);
-        drawContext.ctx.fillText(`Hover tile: ${((this.mouse.x - drawContext.transformX) / drawContext.scale) >> Tile.TileSizeShift}, ${((this.mouse.y - drawContext.transformY) / drawContext.scale) >> Tile.TileSizeShift}`, 10, 100);
-        drawContext.ctx.restore();
+        this.mouseTileCol = ((this.mouse.x - drawContext.transformX) / drawContext.scale) >> Tile.TileSizeShift;
+        this.mouseTileRow = ((this.mouse.y - drawContext.transformY) / drawContext.scale) >> Tile.TileSizeShift;
+
+        drawContext.drawPath(this.mousePath);
+
+        if (this.DEBUG_SHOW_TILE_LOC)
+        {
+            drawContext.ctx.save();
+            drawContext.ctx.resetTransform();
+            drawContext.ctx.fillStyle = 'blue';
+            drawContext.ctx.font = "30px Arial";
+            drawContext.ctx.fillText(`Tile offset: ${x0}, ${y0}`, 10, 50);
+            drawContext.ctx.fillText(`Hover tile: ${this.mouseTileCol}, ${this.mouseTileRow}`, 10, 100);
+            drawContext.ctx.restore();
+        }
         this.needsRedraw = false;
     }
 
-    getTile(y: number, x: number): string {
+    getTile(row: number, col: number): Tile {
+        if (row < 0 || row >= this.height || col < 0 || col >= this.width) return undefined;
+        return this.tileMap[row][col];
+    }
+
+    getTileHex(y: number, x: number): string {
         if (y < 0 || y >= this.height || x < 0 || x >= this.width) return '-1';
         return this.pixelHexValues[x + y * this.width];
     }
@@ -118,9 +150,68 @@ export class Level {
 
         if (y < 0 || y >= this.height || x < 0 || x >= this.width) return 0;
 
-        if (this.explorationMap[y][x] && this.brightnessMap[y][x] < 25) 
+        if (this.tileMap[y][x].explored && this.tileMap[y][x].brightness < 25) 
             return 25;
 
-        return this.brightnessMap[y][x];
+        return this.tileMap[y][x].brightness;
+    }
+
+    findPath(startTileRow: number, startTileCol: number, goalTileRow: number, goalTileCol: number): PathfindingNode[] {
+        var startTile = this.getTile(startTileRow, startTileCol);
+        var goalTile = this.getTile(goalTileRow, goalTileCol);
+        if (goalTile == null || goalTile == undefined || goalTile.isSolid || startTile.isSolid){
+            return null;
+        } 
+
+        var openList = [];
+        var closedList = [];
+        
+        var dist = this.getDistance(startTileRow, startTileCol, goalTileRow, goalTileCol);
+        var current = new PathfindingNode(startTileRow, startTileCol, null, 0, dist);
+
+        openList.push(current);
+
+        while(openList.length > 0) 
+        {
+            openList.sort((a, b) => a.g - b.g);
+            current = openList.shift();
+            if (current.tileRow == goalTileRow && current.tileCol == goalTileCol)
+            {
+                var path = [];
+                while(current.parent != null) {
+                    path.push(current);
+                    current = current.parent;
+                }
+                path.push(current);
+                return path;
+            }
+            closedList.push(current);
+
+            for (var i = -1; i < 2; i++) {
+                for (var j = -1; j < 2; j++) {
+                    if (i == 0 && j == 0) continue;
+
+                    var tile = this.getTile(current.tileRow + i, current.tileCol + j);
+                    if (tile == undefined || tile == null) continue;
+                    if (tile.isSolid) continue;
+    
+                    var gCost = current.g + this.getDistance(current.tileRow, current.tileCol, tile.row, tile.col);
+                    var hCost = this.getDistance(tile.row, tile.col, goalTileRow, goalTileCol);
+    
+                    var node = new PathfindingNode(tile.row, tile.col, current, gCost, hCost);
+
+                    if (closedList.find(x => x.tileCol == node.tileCol && x.tileRow == node.tileRow) && gCost >= current.g) continue;
+                    if (!openList.find(x => x.tileCol == node.tileCol && x.tileRow == node.tileRow) || gCost < current.g) openList.push(node);
+                }
+            }
+        }
+        closedList = [];
+        return null;
+    }
+
+    getDistance(r0: number, c0: number, r1: number, c1: number): number {
+        var dx = r0 - r1;
+        var dy = c0 - c1;
+        return Math.sqrt(dx * dx + dy * dy);
     }
 }
