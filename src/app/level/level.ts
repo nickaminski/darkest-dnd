@@ -13,9 +13,6 @@ export class Level {
     loaded: boolean = false;
     camera: Camera;
     mouse: Mouse;
-    mousePath: PathfindingNode[];
-    mouseTileCol: number;
-    mouseTileRow: number;
     entities: Entity[];
     tileMap: Tile[][];
     needsRedraw: boolean = false;
@@ -57,7 +54,7 @@ export class Level {
                 if (!this.tileMap[row]) this.tileMap[row] = [];
 
                 newTile.brightness = 0;
-                newTile.explored = true;
+                newTile.explored = false;
 
                 if (this.pixelHexValues[i] == '000000ff') {
                     newTile.isSolid = true;
@@ -70,22 +67,34 @@ export class Level {
             
             this.entities.forEach(e => {
                 if (e instanceof Player) {
+                    e.init(this);
                     e.calculateVision(this.tileMap);
                 }
             });
         }
+
+        this.mouse.$mouseClick.subscribe(e=> {
+            if(this.mouse.mousePath) {
+                var pov = this.entities.find(x => x instanceof Player && x.pov) as Player;
+                var thePath = [...this.mouse.mousePath];
+                pov.currentMovePath = thePath;
+            }
+        });
     }
 
     addEntity(e: Entity) {
         this.entities.push(e);
 
         if (e instanceof Player && this.loaded) {
+            e.init(this);
             e.calculateVision(this.tileMap);
         }
     }
 
     update(delta: number) {
         if (!this.loaded) return;
+
+        this.tileMap.forEach(row => row.forEach(col => {col.brightness = 0}));
 
         this.camera.update(delta, this);
 
@@ -94,7 +103,7 @@ export class Level {
         if (this.recalculateMousePath)
         {
             var pov = this.entities.find(x => x instanceof Player && x.pov) as Player;
-            this.mousePath = this.findPath(pov.pixelx >> Tile.TileSizeShift, pov.pixely >> Tile.TileSizeShift, this.mouseTileRow, this.mouseTileCol);
+            this.mouse.mousePath = this.findPath(pov.pixely >> Tile.TileSizeShift, pov.pixelx >> Tile.TileSizeShift, this.mouse.tileY, this.mouse.tileX);
             this.recalculateMousePath = false;
         }
     }
@@ -117,10 +126,10 @@ export class Level {
 
         this.entities.forEach(e => e.render(drawContext));
 
-        this.mouseTileCol = ((this.mouse.x - drawContext.transformX) / drawContext.scale) >> Tile.TileSizeShift;
-        this.mouseTileRow = ((this.mouse.y - drawContext.transformY) / drawContext.scale) >> Tile.TileSizeShift;
+        this.mouse.tileX = ((this.mouse.x - drawContext.transformX) / drawContext.scale) >> Tile.TileSizeShift;
+        this.mouse.tileY = ((this.mouse.y - drawContext.transformY) / drawContext.scale) >> Tile.TileSizeShift;
 
-        drawContext.drawPath(this.mousePath);
+        this.mouse.render(drawContext);
 
         if (this.DEBUG_SHOW_TILE_LOC)
         {
@@ -129,7 +138,7 @@ export class Level {
             drawContext.ctx.fillStyle = 'blue';
             drawContext.ctx.font = "30px Arial";
             drawContext.ctx.fillText(`Tile offset: ${x0}, ${y0}`, 10, 50);
-            drawContext.ctx.fillText(`Hover tile: ${this.mouseTileCol}, ${this.mouseTileRow}`, 10, 100);
+            drawContext.ctx.fillText(`Hover tile: ${this.mouse.tileX}, ${this.mouse.tileY}`, 10, 100);
             drawContext.ctx.restore();
         }
         this.needsRedraw = false;
@@ -146,7 +155,7 @@ export class Level {
     }
 
     getBrightness(y: number, x: number): number {
-        if (!this.DEBUG_USE_BRIGHTNESS) return 1;
+        if (!this.DEBUG_USE_BRIGHTNESS) return 100;
 
         if (y < 0 || y >= this.height || x < 0 || x >= this.width) return 0;
 
@@ -193,7 +202,7 @@ export class Level {
 
                     var tile = this.getTile(current.tileRow + i, current.tileCol + j);
                     if (tile == undefined || tile == null) continue;
-                    if (tile.isSolid) continue;
+                    if (tile.isSolid || !tile.explored) continue;
 
                     var top = this.getTile(current.tileRow - 1, current.tileCol);
                     var bottom = this.getTile(current.tileRow + 1, current.tileCol);

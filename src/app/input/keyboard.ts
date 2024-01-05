@@ -18,6 +18,10 @@ export class Keyboard {
         return this.keys.get('KeyS') || this.keys.get('ArrowDown');
     }
 
+    public get shift() {
+        return this.keys.get('ShiftRight') || this.keys.get('ShiftLeft');
+    }
+
     onKeyDown(e: KeyboardEvent) {
         this.keys.set(e.code, true);
     }

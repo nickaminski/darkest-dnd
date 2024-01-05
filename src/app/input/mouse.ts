@@ -1,11 +1,30 @@
+import { Observable, Subject } from "rxjs";
 import { DrawContext } from "../graphics/drawContext";
 import { Level } from "../level/level";
+import { PathfindingNode } from "../level/pathfindingNode";
+import { Keyboard } from "./keyboard";
 
 export class Mouse {
+
+    private mouseClickSubject: Subject<MouseEvent>;
+    $mouseClick: Observable<MouseEvent>;
+
+    keyboard: Keyboard;
+
     #x: number = 0;
     #y: number = 0;
 
+    tileX: number = 0;
+    tileY: number = 0;
+    mousePath: PathfindingNode[];
+
     mouseWheelSensitivity = 0.0003;
+
+    constructor(keyboard: Keyboard) {
+        this.keyboard = keyboard;
+        this.mouseClickSubject = new Subject<MouseEvent>();
+        this.$mouseClick = this.mouseClickSubject.asObservable();
+    }
 
     public get x(): number {
         return this.#x;
@@ -23,6 +42,11 @@ export class Mouse {
         this.#y = newVal;
     }
 
+    public render(drawCtx: DrawContext) {
+        if (this.keyboard.shift)
+            drawCtx.drawPath(this.mousePath);
+    }
+
     public onMouseMove(e: MouseEvent, level: Level) {
         this.x = e.clientX;
         this.y = e.clientY;
@@ -34,5 +58,9 @@ export class Mouse {
         const scrollChange = e.deltaY * this.mouseWheelSensitivity;
         drawContext.mouseWheelScroll(scrollChange);
         level.needsRedraw = true;
+    }
+
+    public onMouseClick(e: MouseEvent) {
+        this.mouseClickSubject.next(e);
     }
 }

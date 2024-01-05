@@ -38,8 +38,8 @@ export class Game {
         this.drawCtx.updateTransform(0, 0);
         this.width = canvas.width;
         this.height = canvas.height;
-        this.mouse = new Mouse();
         this.keyboard = new Keyboard();
+        this.mouse = new Mouse(this.keyboard);
         this.camera = new Camera(this.keyboard, this.drawCtx);
         this.level = new Level(levelImage, this.camera, this.mouse);
         var player = new Player(7 * Tile.TileSize, 7 * Tile.TileSize, player2Image, true);
@@ -50,6 +50,7 @@ export class Game {
         document.addEventListener('wheel', (e) => this.mouse.onMouseWheel(e, this.drawCtx, this.level));
         document.addEventListener('keydown', (e) => this.keyboard.onKeyDown(e));
         document.addEventListener('keyup', (e) => this.keyboard.onKeyUp(e));
+        document.addEventListener('click', (e) => this.mouse.onMouseClick(e));
     }
 
     update(delta: number): void {
