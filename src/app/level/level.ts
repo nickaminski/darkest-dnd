@@ -103,7 +103,7 @@ export class Level {
         if (this.recalculateMousePath)
         {
             var pov = this.entities.find(x => x instanceof Player && x.pov) as Player;
-            this.mouse.mousePath = this.findPath(pov.pixely >> Tile.TileSizeShift, pov.pixelx >> Tile.TileSizeShift, this.mouse.tileY, this.mouse.tileX);
+            this.mouse.mousePath = this.findPath(pov.tileRow, pov.tileCol, this.mouse.tileY, this.mouse.tileX);
             this.recalculateMousePath = false;
         }
     }

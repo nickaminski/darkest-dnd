@@ -8,7 +8,6 @@ import { Player } from './entity/player';
 import levelImage from '../assets/maps/test.png';
 import playerImage from '../assets/tokens/Wilbur.png';
 import player2Image from '../assets/tokens/Ancestor.png';
-import { Tile } from './level/tile/tile';
 
 export class Game {
     running: boolean = false;
@@ -42,8 +41,8 @@ export class Game {
         this.mouse = new Mouse(this.keyboard);
         this.camera = new Camera(this.keyboard, this.drawCtx);
         this.level = new Level(levelImage, this.camera, this.mouse);
-        var player = new Player(7 * Tile.TileSize, 7 * Tile.TileSize, player2Image, true);
-        var player2 = new Player(5 * Tile.TileSize, 5 * Tile.TileSize, playerImage, false);
+        var player = new Player(7, 7, player2Image, true);
+        var player2 = new Player(5, 5, playerImage, false);
         this.level.addEntity(player);
         this.level.addEntity(player2);
         document.addEventListener('mousemove', (e) => this.mouse.onMouseMove(e, this.level));
