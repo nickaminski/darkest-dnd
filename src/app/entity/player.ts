@@ -46,9 +46,8 @@ export class Player implements Entity {
 
     move(delta: number) {
         this.level.needsRedraw = true;
-        this.level.recalculateMousePath = true;
         this.moving = true;
-
+        
         var idx = this.currentMovePath.length - 1;
         var goalTile = this.currentMovePath[idx];
         var goalx = goalTile.tileCol << Tile.TileSizeShift;
@@ -59,6 +58,7 @@ export class Player implements Entity {
             this.tileRow = goalTile.tileRow;
             this.tileCol = goalTile.tileCol;
             this.currentMovePath.splice(idx, 1);
+            this.level.recalculateMousePath = true;
         }
 
         var dirY = Math.sign(goaly - this.pixely);

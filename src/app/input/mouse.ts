@@ -3,6 +3,7 @@ import { DrawContext } from "../graphics/drawContext";
 import { Level } from "../level/level";
 import { PathfindingNode } from "../level/pathfindingNode";
 import { Keyboard } from "./keyboard";
+import { Camera } from "../entity/camera";
 
 export class Mouse {
 
@@ -10,6 +11,7 @@ export class Mouse {
     $mouseClick: Observable<MouseEvent>;
 
     keyboard: Keyboard;
+    camera: Camera;
 
     #x: number = 0;
     #y: number = 0;
@@ -20,8 +22,9 @@ export class Mouse {
 
     mouseWheelSensitivity = 0.0003;
 
-    constructor(keyboard: Keyboard) {
+    constructor(keyboard: Keyboard, camera: Camera) {
         this.keyboard = keyboard;
+        this.camera = camera;
         this.mouseClickSubject = new Subject<MouseEvent>();
         this.$mouseClick = this.mouseClickSubject.asObservable();
     }
@@ -56,7 +59,8 @@ export class Mouse {
 
     public onMouseWheel(e: WheelEvent, drawContext: DrawContext, level: Level) {
         const scrollChange = e.deltaY * this.mouseWheelSensitivity;
-        drawContext.mouseWheelScroll(scrollChange);
+        drawContext.mouseWheelScroll(scrollChange, e.clientX, e.clientY);
+        this.camera.setCameraPosition(drawContext.transformX, drawContext.transformY);
         level.needsRedraw = true;
     }
 

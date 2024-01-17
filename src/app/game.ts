@@ -38,8 +38,8 @@ export class Game {
         this.width = canvas.width;
         this.height = canvas.height;
         this.keyboard = new Keyboard();
-        this.mouse = new Mouse(this.keyboard);
         this.camera = new Camera(this.keyboard, this.drawCtx);
+        this.mouse = new Mouse(this.keyboard, this.camera);
         this.level = new Level(levelImage, this.camera, this.mouse);
         var player = new Player(7, 7, player2Image, true);
         var player2 = new Player(5, 5, playerImage, false);
