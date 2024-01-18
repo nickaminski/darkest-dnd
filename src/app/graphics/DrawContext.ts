@@ -10,7 +10,6 @@ export class DrawContext {
     height: number;
     minScale: number = 0.35;
     maxScale: number = 1.75;
-    zoomRatio: number = 0.9;
 
     public get scale(): number {
         return this.#scale;
@@ -58,28 +57,6 @@ export class DrawContext {
         this.transformY = ty;
         var t = this.#ctx.getTransform();
         this.#ctx.setTransform(t.a, 0, 0, t.d, tx, ty);
-    }
-
-    mouseWheelScroll(scaleChange: number, mouseX: number, mouseY: number) {
-        const t = this.#ctx.getTransform();
-
-        const oldScale = t.a;
-        const scaleBy = scaleChange > 0 ? this.zoomRatio : 1 / this.zoomRatio;
-        const newScale = oldScale * scaleBy;
-
-        if (newScale < 0.25 || newScale > 1.85) return;
-
-        const oldOrigin = { x: t.e, y: t.f };
-        const newOrigin = {
-            x: mouseX - (mouseX - oldOrigin.x) * scaleBy,
-            y: mouseY - (mouseY - oldOrigin.y) * scaleBy
-        };
-
-        this.transformX = newOrigin.x;
-        this.transformY = newOrigin.y;
-        this.scale = newScale;
-
-        this.#ctx.setTransform(newScale, 0, 0, newScale, newOrigin.x, newOrigin.y);
     }
 
     drawTile(tileRow: number, tileCol: number, width: number, height: number, tileHex: string, brightness: number){

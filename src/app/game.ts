@@ -39,14 +39,14 @@ export class Game {
         this.height = canvas.height;
         this.keyboard = new Keyboard();
         this.camera = new Camera(this.keyboard, this.drawCtx);
-        this.mouse = new Mouse(this.keyboard, this.camera);
-        this.level = new Level(levelImage, this.camera, this.mouse);
+        this.mouse = new Mouse(this.keyboard);
+        this.level = new Level(levelImage, this.mouse);
         var player = new Player(7, 7, player2Image, true);
         var player2 = new Player(5, 5, playerImage, false);
         this.level.addEntity(player);
         this.level.addEntity(player2);
         document.addEventListener('mousemove', (e) => this.mouse.onMouseMove(e, this.level));
-        document.addEventListener('wheel', (e) => this.mouse.onMouseWheel(e, this.drawCtx, this.level));
+        document.addEventListener('wheel', (e) => this.mouse.onMouseWheel(e, this.drawCtx, this.level, this.camera));
         document.addEventListener('keydown', (e) => this.keyboard.onKeyDown(e));
         document.addEventListener('keyup', (e) => this.keyboard.onKeyUp(e));
         document.addEventListener('click', (e) => this.mouse.onMouseClick(e));
@@ -54,6 +54,7 @@ export class Game {
 
     update(delta: number): void {
         this.level.update(delta);
+        this.camera.update(delta, this.level);
     }
 
     render(): void {

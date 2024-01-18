@@ -11,7 +11,6 @@ export class Mouse {
     $mouseClick: Observable<MouseEvent>;
 
     keyboard: Keyboard;
-    camera: Camera;
 
     #x: number = 0;
     #y: number = 0;
@@ -20,11 +19,11 @@ export class Mouse {
     tileY: number = 0;
     mousePath: PathfindingNode[];
 
+    zoomRatio: number = 0.9;
     mouseWheelSensitivity = 0.0003;
 
-    constructor(keyboard: Keyboard, camera: Camera) {
+    constructor(keyboard: Keyboard) {
         this.keyboard = keyboard;
-        this.camera = camera;
         this.mouseClickSubject = new Subject<MouseEvent>();
         this.$mouseClick = this.mouseClickSubject.asObservable();
     }
@@ -57,10 +56,26 @@ export class Mouse {
         level.recalculateMousePath = true;
     }
 
-    public onMouseWheel(e: WheelEvent, drawContext: DrawContext, level: Level) {
-        const scrollChange = e.deltaY * this.mouseWheelSensitivity;
-        drawContext.mouseWheelScroll(scrollChange, e.clientX, e.clientY);
-        this.camera.setCameraPosition(drawContext.transformX, drawContext.transformY);
+    public onMouseWheel(e: WheelEvent, drawContext: DrawContext, level: Level, camera: Camera) {
+        const scaleChange = e.deltaY * this.mouseWheelSensitivity;
+        const t = drawContext.ctx.getTransform();
+
+        const oldScale = t.a;
+        const scaleBy = scaleChange > 0 ? this.zoomRatio : 1 / this.zoomRatio;
+        const newScale = oldScale * scaleBy;
+
+        if (newScale < 0.25 || newScale > 1.85) return;
+
+        const oldOrigin = { x: t.e, y: t.f };
+        const newOrigin = {
+            x: e.clientX - (e.clientX - oldOrigin.x) * scaleBy,
+            y: e.clientY - (e.clientY - oldOrigin.y) * scaleBy
+        };
+
+        drawContext.updateTransform(newOrigin.x, newOrigin.y);
+        drawContext.updateScale(newScale);
+
+        camera.setCameraPosition(drawContext.transformX, drawContext.transformY);
         level.needsRedraw = true;
     }
 

@@ -1,4 +1,3 @@
-import { Camera } from "../entity/camera";
 import { Entity } from "../entity/entity";
 import { Player } from "../entity/player";
 import { DrawContext } from "../graphics/drawContext";
@@ -11,7 +10,6 @@ export class Level {
     height: number;
     pixelHexValues: string[];
     loaded: boolean = false;
-    camera: Camera;
     mouse: Mouse;
     entities: Entity[];
     tileMap: Tile[][];
@@ -21,11 +19,10 @@ export class Level {
     DEBUG_USE_BRIGHTNESS = true;
     DEBUG_SHOW_TILE_LOC = true;
 
-    constructor(imageRef: any, camera: Camera, mouse: Mouse) {
+    constructor(imageRef: any, mouse: Mouse) {
         this.pixelHexValues = [];
         this.entities = [];
         this.tileMap = [];
-        this.camera = camera;
         this.mouse = mouse;
         var loadedImage = new Image();
         loadedImage.src = imageRef;
@@ -95,8 +92,6 @@ export class Level {
         if (!this.loaded) return;
 
         this.tileMap.forEach(row => row.forEach(col => {col.brightness = 0}));
-
-        this.camera.update(delta, this);
 
         this.entities.forEach(e => e.update(delta));
 
