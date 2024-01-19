@@ -51,5 +51,6 @@ export class Camera {
     setCameraPosition(x: number, y: number) {
         this.#x = x;
         this.#y = y;
+        this.screen.updateTransform(this.#x, this.#y);
     }
 }
