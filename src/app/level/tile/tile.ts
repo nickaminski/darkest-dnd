@@ -1,3 +1,5 @@
+import { BrightnessLevel } from "./brightness";
+
 export class Tile {
 
     public static get TileSize(): number {
@@ -10,7 +12,7 @@ export class Tile {
 
     row: number;
     col: number;
-    brightness: number;
+    brightness: BrightnessLevel;
     isSolid: boolean;
     explored: boolean;
 

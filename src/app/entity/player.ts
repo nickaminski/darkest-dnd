@@ -1,6 +1,7 @@
 import { DrawContext } from "../graphics/drawContext";
 import { Level } from "../level/level";
 import { PathfindingNode } from "../level/pathfindingNode";
+import { BrightnessLevel } from "../level/tile/brightness";
 import { Tile } from "../level/tile/tile";
 import { Entity } from "./entity";
 
@@ -13,8 +14,8 @@ export class Player implements Entity {
     pov: boolean;
     level: Level;
 
-    radiantLight = 5;
-    dimLight = 4;
+    radiantLightDistance = 5;
+    dimLightDistance = 4;
 
     moveSpeed = 0.1;
     currentMovePath: PathfindingNode[];
@@ -74,13 +75,14 @@ export class Player implements Entity {
 
     private floodVision(lightStep: number, tileRow: number, tileCol: number, tileMap: Tile[][]) {
         if (tileRow < 0 || tileCol < 0 || tileRow >= tileMap.length || tileCol >= tileMap[0].length) return;
-        if (tileMap[tileRow][tileCol].isSolid) return;
-        if (lightStep == this.dimLight + this.radiantLight) return;
-    
-        if (lightStep < this.radiantLight) tileMap[tileRow][tileCol].brightness = 100;
-        else if (lightStep < this.radiantLight + this.dimLight && tileMap[tileRow][tileCol].brightness < 50) tileMap[tileRow][tileCol].brightness = 50;
-    
+        if (lightStep == this.dimLightDistance + this.radiantLightDistance) return;
+
         tileMap[tileRow][tileCol].explored = true;
+        
+        if (tileMap[tileRow][tileCol].isSolid) return;
+        
+        if (lightStep < this.radiantLightDistance) tileMap[tileRow][tileCol].brightness = BrightnessLevel.Radiant;
+        else if (lightStep < this.radiantLightDistance + this.dimLightDistance && tileMap[tileRow][tileCol].brightness < BrightnessLevel.Dim) tileMap[tileRow][tileCol].brightness = BrightnessLevel.Dim;
     
         this.floodVision(lightStep + 1, tileRow - 1, tileCol, tileMap);
         this.floodVision(lightStep + 1, tileRow + 1, tileCol, tileMap);

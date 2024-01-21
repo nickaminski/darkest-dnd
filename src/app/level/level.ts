@@ -3,6 +3,7 @@ import { Player } from "../entity/player";
 import { DrawContext } from "../graphics/drawContext";
 import { Mouse } from "../input/mouse";
 import { PathfindingNode } from "./pathfindingNode";
+import { BrightnessLevel } from "./tile/brightness";
 import { Tile } from "./tile/tile";
 
 export class Level {
@@ -50,7 +51,7 @@ export class Level {
 
                 if (!this.tileMap[row]) this.tileMap[row] = [];
 
-                newTile.brightness = 0;
+                newTile.brightness = BrightnessLevel.Dark;
                 newTile.explored = false;
 
                 if (this.pixelHexValues[i] == '000000ff') {
@@ -137,6 +138,7 @@ export class Level {
             drawContext.ctx.restore();
         }
         this.needsRedraw = false;
+        console.log(this.tileMap[43][17]);
     }
 
     getTile(row: number, col: number): Tile {
@@ -150,12 +152,13 @@ export class Level {
     }
 
     getBrightness(y: number, x: number): number {
-        if (!this.DEBUG_USE_BRIGHTNESS) return 100;
+        if (!this.DEBUG_USE_BRIGHTNESS) return BrightnessLevel.Radiant;
 
-        if (y < 0 || y >= this.height || x < 0 || x >= this.width) return 0;
+        if (y < 0 || y >= this.height || x < 0 || x >= this.width) return BrightnessLevel.Dark;
 
-        if (this.tileMap[y][x].explored && this.tileMap[y][x].brightness < 25) 
-            return 25;
+        if (this.tileMap[y][x].explored && this.tileMap[y][x].brightness == BrightnessLevel.Dark) {
+            return BrightnessLevel.Explored;
+        }
 
         return this.tileMap[y][x].brightness;
     }

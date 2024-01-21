@@ -45,7 +45,7 @@ export class Mouse {
     }
 
     public render(drawCtx: DrawContext) {
-        if (this.keyboard.shift)
+        if (this.keyboard.drawPath)
             drawCtx.drawPath(this.mousePath);
     }
 
@@ -64,7 +64,7 @@ export class Mouse {
         const scaleBy = scaleChange > 0 ? this.zoomRatio : 1 / this.zoomRatio;
         const newScale = oldScale * scaleBy;
 
-        if (newScale < 0.25 || newScale > 1.85) return;
+        if (newScale < drawContext.minScale || newScale > drawContext.maxScale) return;
 
         const oldOrigin = { x: t.e, y: t.f };
         const newOrigin = {
