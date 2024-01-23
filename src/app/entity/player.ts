@@ -1,4 +1,5 @@
 import { DrawContext } from "../graphics/drawContext";
+import { Keyboard } from "../input/keyboard";
 import { Level } from "../level/level";
 import { PathfindingNode } from "../level/pathfindingNode";
 import { BrightnessLevel } from "../level/tile/brightness";
@@ -13,6 +14,7 @@ export class Player implements Entity {
     image: HTMLImageElement;
     pov: boolean;
     level: Level;
+    keyboard: Keyboard;
 
     radiantLightDistance = 5;
     dimLightDistance = 4;
@@ -21,11 +23,12 @@ export class Player implements Entity {
     currentMovePath: PathfindingNode[];
     moving = false;
 
-    constructor(startTileRow: number, startTileCol: number, imgSrc: any, pov: boolean) {
+    constructor(startTileRow: number, startTileCol: number, keyboard: Keyboard, imgSrc: any, pov: boolean) {
         this.tileRow = startTileRow;
         this.tileCol = startTileCol;
         this.pixelx = this.tileCol << Tile.TileSizeShift;
         this.pixely = this.tileRow << Tile.TileSizeShift;
+        this.keyboard = keyboard;
         this.image = new Image();
         this.image.src = imgSrc;
         this.pov = pov;
@@ -33,6 +36,14 @@ export class Player implements Entity {
 
     update(delta: number) {
         this.calculateVision(this.level.tileMap);
+        if (this.pov) {
+            if (this.keyboard.stopPlayerMovement) {
+                if (this.currentMovePath) {
+                    while (this.currentMovePath.length > 1)
+                        this.currentMovePath.shift();
+                }
+            }
+        }
         if (this.currentMovePath && this.currentMovePath.length > 0) {
             this.move(delta);
         } else if (this.moving) {

@@ -22,6 +22,10 @@ export class Keyboard {
         return this.keys.get('KeyZ');
     }
 
+    public get stopPlayerMovement() {
+        return this.keys.get('Space');
+    }
+
     onKeyDown(e: KeyboardEvent) {
         this.keys.set(e.code, true);
     }

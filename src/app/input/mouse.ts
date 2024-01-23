@@ -4,6 +4,7 @@ import { Level } from "../level/level";
 import { PathfindingNode } from "../level/pathfindingNode";
 import { Keyboard } from "./keyboard";
 import { Camera } from "../entity/camera";
+import { Tile } from "../level/tile/tile";
 
 export class Mouse {
 
@@ -49,11 +50,17 @@ export class Mouse {
             drawCtx.drawPath(this.mousePath);
     }
 
-    public onMouseMove(e: MouseEvent, level: Level) {
+    public onMouseMove(e: MouseEvent, level: Level, drawContext: DrawContext) {
+        const oldX = this.tileX;
+        const oldY = this.tileY;
         this.x = e.clientX;
         this.y = e.clientY;
+        this.tileX = ((this.x - drawContext.transformX) / drawContext.scale) >> Tile.TileSizeShift;
+        this.tileY = ((this.y - drawContext.transformY) / drawContext.scale) >> Tile.TileSizeShift;
         level.needsRedraw = true;
-        level.recalculateMousePath = true;
+        if (oldX != this.tileX || oldY != this.tileY) {
+            level.recalculateMousePath = true;
+        }
     }
 
     public onMouseWheel(e: WheelEvent, drawContext: DrawContext, level: Level, camera: Camera) {

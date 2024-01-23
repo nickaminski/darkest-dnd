@@ -41,12 +41,12 @@ export class Game {
         this.camera = new Camera(this.keyboard, this.drawCtx);
         this.mouse = new Mouse(this.keyboard);
         this.level = new Level(levelImage, this.mouse);
-        var player = new Player(47, 2, player2Image, true);
-        var player2 = new Player(5, 5, playerImage, false);
+        var player = new Player(47, 2, this.keyboard, player2Image, true);
+        var player2 = new Player(5, 5, null, playerImage, false);
         this.level.addEntity(player);
         this.level.addEntity(player2);
         this.camera.setCameraPosition((-player.pixelx + 64 * 3) * this.drawCtx.scale, (-player.pixely + 64 * 10) * this.drawCtx.scale);
-        document.addEventListener('mousemove', (e) => this.mouse.onMouseMove(e, this.level));
+        document.addEventListener('mousemove', (e) => this.mouse.onMouseMove(e, this.level, this.drawCtx));
         document.addEventListener('wheel', (e) => this.mouse.onMouseWheel(e, this.drawCtx, this.level, this.camera));
         document.addEventListener('keydown', (e) => this.keyboard.onKeyDown(e));
         document.addEventListener('keyup', (e) => this.keyboard.onKeyUp(e));

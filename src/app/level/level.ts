@@ -122,9 +122,6 @@ export class Level {
 
         this.entities.forEach(e => e.render(drawContext));
 
-        this.mouse.tileX = ((this.mouse.x - drawContext.transformX) / drawContext.scale) >> Tile.TileSizeShift;
-        this.mouse.tileY = ((this.mouse.y - drawContext.transformY) / drawContext.scale) >> Tile.TileSizeShift;
-
         this.mouse.render(drawContext);
 
         if (this.DEBUG_SHOW_TILE_LOC)
@@ -138,7 +135,6 @@ export class Level {
             drawContext.ctx.restore();
         }
         this.needsRedraw = false;
-        console.log(this.tileMap[43][17]);
     }
 
     getTile(row: number, col: number): Tile {
