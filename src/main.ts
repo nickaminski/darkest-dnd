@@ -1,6 +1,8 @@
 import { Game } from "./app/game";
+import { io } from 'socket.io-client';
 
-window.addEventListener('load', function(){
+window.addEventListener('load', function () {
+    const socket = io('http://localhost:3000');
     const canvas = document.getElementById('render') as HTMLCanvasElement;
     var lastTime = Date.now();
     var updates = 0;
@@ -12,7 +14,7 @@ window.addEventListener('load', function(){
     game.start();
     gameLoop();
 
-    window.addEventListener('resize', function (){
+    window.addEventListener('resize', function () {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         game.width = canvas.width;
