@@ -2,7 +2,7 @@ import { Game } from "./app/game";
 import { io } from 'socket.io-client';
 
 window.addEventListener('load', function () {
-    const socket = io('http://localhost:3000');
+    const socket = io(`${window.location.hostname}:3000`);
     const canvas = document.getElementById('render') as HTMLCanvasElement;
     var lastTime = Date.now();
     var updates = 0;
@@ -10,7 +10,7 @@ window.addEventListener('load', function () {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    const game = new Game(canvas);
+    const game = new Game(canvas, socket);
     game.start();
     gameLoop();
 

@@ -18,7 +18,7 @@ export class Level {
     recalculateMousePath: boolean = false;
 
     DEBUG_USE_BRIGHTNESS = true;
-    DEBUG_SHOW_TILE_LOC = true;
+    DEBUG_SHOW_TILE_LOC = false;
 
     constructor(imageRef: any, mouse: Mouse) {
         this.pixelHexValues = [];
@@ -89,6 +89,14 @@ export class Level {
         }
     }
 
+    removeEntityById(id: string) {
+        const idx = this.entities.findIndex(x => x.id == id);
+
+        if (idx != -1) {
+            this.entities.splice(idx, 1);
+        }
+    }
+
     update(delta: number) {
         if (!this.loaded) return;
 
@@ -98,9 +106,12 @@ export class Level {
 
         if (this.recalculateMousePath)
         {
-            var pov = this.entities.find(x => x instanceof Player && x.pov) as Player;
-            this.mouse.mousePath = this.findPath(pov.tileRow, pov.tileCol, this.mouse.tileY, this.mouse.tileX);
             this.recalculateMousePath = false;
+            var pov = this.entities.find(x => x instanceof Player && x.pov) as Player;
+            if (pov)
+            {
+                this.mouse.mousePath = this.findPath(pov.tileRow, pov.tileCol, this.mouse.tileY, this.mouse.tileX);
+            }
         }
     }
 

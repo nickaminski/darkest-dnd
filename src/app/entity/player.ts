@@ -7,6 +7,7 @@ import { Tile } from "../level/tile/tile";
 import { Entity } from "./entity";
 
 export class Player implements Entity {
+    id: string;
     pixelx: number;
     pixely: number;
     tileRow: number;
@@ -23,7 +24,8 @@ export class Player implements Entity {
     currentMovePath: PathfindingNode[];
     moving = false;
 
-    constructor(startTileRow: number, startTileCol: number, keyboard: Keyboard, imgSrc: any, pov: boolean) {
+    constructor(playerId: string, startTileRow: number, startTileCol: number, keyboard: Keyboard, imgSrc: any, pov: boolean) {
+        this.id = playerId;
         this.tileRow = startTileRow;
         this.tileCol = startTileCol;
         this.pixelx = this.tileCol << Tile.TileSizeShift;
@@ -32,6 +34,10 @@ export class Player implements Entity {
         this.image = new Image();
         this.image.src = imgSrc;
         this.pov = pov;
+
+        this.image.onload = () => {
+            this.level.needsRedraw = true;
+        }
     }
 
     update(delta: number) {

@@ -26,6 +26,10 @@ export class Keyboard {
         return this.keys.get('Space');
     }
 
+    public get toggleLights() {
+        return this.keys.get('KeyL');
+    }
+
     onKeyDown(e: KeyboardEvent) {
         this.keys.set(e.code, true);
     }
