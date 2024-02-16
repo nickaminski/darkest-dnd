@@ -1,3 +1,4 @@
+import { Socket } from "socket.io-client";
 import { DrawContext } from "../graphics/drawContext";
 import { Keyboard } from "../input/keyboard";
 import { Level } from "../level/level";
@@ -16,6 +17,8 @@ export class Player implements Entity {
     pov: boolean;
     level: Level;
     keyboard: Keyboard;
+    socket: Socket;
+    shareVision: boolean;
 
     radiantLightDistance = 5;
     dimLightDistance = 4;
@@ -24,7 +27,7 @@ export class Player implements Entity {
     currentMovePath: PathfindingNode[];
     moving = false;
 
-    constructor(playerId: string, startTileRow: number, startTileCol: number, keyboard: Keyboard, imgSrc: any, pov: boolean) {
+    constructor(playerId: string, startTileRow: number, startTileCol: number, keyboard: Keyboard, imgSrc: any, pov: boolean, shareVision: boolean, socket: Socket) {
         this.id = playerId;
         this.tileRow = startTileRow;
         this.tileCol = startTileCol;
@@ -34,6 +37,8 @@ export class Player implements Entity {
         this.image = new Image();
         this.image.src = imgSrc;
         this.pov = pov;
+        this.shareVision = shareVision;
+        this.socket = socket;
 
         this.image.onload = () => {
             this.level.needsRedraw = true;
@@ -43,14 +48,12 @@ export class Player implements Entity {
     update(delta: number) {
         this.calculateVision(this.level.tileMap);
         if (this.pov) {
-            if (this.keyboard.stopPlayerMovement) {
-                if (this.currentMovePath) {
-                    while (this.currentMovePath.length > 1)
-                        this.currentMovePath.shift();
-                }
+            if (this.keyboard.stopPlayerMovement && this.currentMovePath?.length > 0) {
+                this.socket.emit('stopped', { tileRow: this.tileRow, tileCol: this.tileCol });
+                this.stopPathMovement();
             }
         }
-        if (this.currentMovePath && this.currentMovePath.length > 0) {
+        if (this.currentMovePath?.length > 0) {
             this.move(delta);
         } else if (this.moving) {
             this.moving = false;
@@ -92,6 +95,7 @@ export class Player implements Entity {
 
     private floodVision(lightStep: number, tileRow: number, tileCol: number, tileMap: Tile[][]) {
         if (tileRow < 0 || tileCol < 0 || tileRow >= tileMap.length || tileCol >= tileMap[0].length) return;
+        if (!this.shareVision) return;
         if (lightStep == this.dimLightDistance + this.radiantLightDistance) return;
 
         tileMap[tileRow][tileCol].explored = true;
@@ -109,6 +113,13 @@ export class Player implements Entity {
 
     init(level: Level) {
         this.level = level;
+    }
+
+    stopPathMovement(): void {
+        if (this.currentMovePath) {
+            while (this.currentMovePath.length > 1)
+                this.currentMovePath.shift();
+        }
     }
 
 }

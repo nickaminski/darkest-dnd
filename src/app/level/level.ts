@@ -1,3 +1,4 @@
+import { Socket } from "socket.io-client";
 import { Entity } from "../entity/entity";
 import { Player } from "../entity/player";
 import { DrawContext } from "../graphics/drawContext";
@@ -20,7 +21,7 @@ export class Level {
     DEBUG_USE_BRIGHTNESS = true;
     DEBUG_SHOW_TILE_LOC = false;
 
-    constructor(imageRef: any, mouse: Mouse) {
+    constructor(imageRef: any, mouse: Mouse, socket: Socket) {
         this.pixelHexValues = [];
         this.entities = [];
         this.tileMap = [];
@@ -76,6 +77,8 @@ export class Level {
                 var pov = this.entities.find(x => x instanceof Player && x.pov) as Player;
                 var thePath = [...this.mouse.mousePath];
                 pov.currentMovePath = thePath;
+
+                socket.emit('click', {tileRow: thePath[0].tileRow, tileCol: thePath[0].tileCol});
             }
         });
     }
@@ -140,7 +143,7 @@ export class Level {
             drawContext.ctx.save();
             drawContext.ctx.resetTransform();
             drawContext.ctx.fillStyle = 'blue';
-            drawContext.ctx.font = "30px Arial";
+            drawContext.ctx.font = '30px Arial';
             drawContext.ctx.fillText(`Tile offset: ${x0}, ${y0}`, 10, 50);
             drawContext.ctx.fillText(`Hover tile: ${this.mouse.tileX}, ${this.mouse.tileY}`, 10, 100);
             drawContext.ctx.restore();

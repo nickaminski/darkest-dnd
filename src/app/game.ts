@@ -43,7 +43,7 @@ export class Game {
         this.keyboard = new Keyboard();
         this.camera = new Camera(this.keyboard, this.drawCtx);
         this.mouse = new Mouse(this.keyboard);
-        this.level = new Level(levelImage, this.mouse);
+        this.level = new Level(levelImage, this.mouse, socket);
 
         document.addEventListener('mousemove', (e) => this.mouse.onMouseMove(e, this.level, this.drawCtx));
         document.addEventListener('wheel', (e) => this.mouse.onMouseWheel(e, this.drawCtx, this.level, this.camera));
@@ -51,7 +51,7 @@ export class Game {
         document.addEventListener('keyup', (e) => this.keyboard.onKeyUp(e));
         document.addEventListener('click', (e) => this.mouse.onMouseClick(e));
 
-        this.registerSocketEvents(socket);
+        this.registerSocketListeningEvents(socket);
     }
 
     update(delta: number): void {
@@ -81,26 +81,41 @@ export class Game {
         this.running = true;
     }
 
-    registerSocketEvents(socket: any): void {
-        socket.on("initialize-player", (playerId: string, currentTileRow: number, currentTileCol: number, pov: boolean, admin: boolean) => {
+    registerSocketListeningEvents(socket: any): void {
+        socket.on('initialize-player', (message: any) => {
             this.level.needsRedraw = true;
-            if (admin) 
+            if (message.admin) 
             {
                 this.admin = true;
                 this.level.DEBUG_USE_BRIGHTNESS = false;
                 return;
             }
 
-            var player = new Player(playerId, currentTileRow, currentTileCol, this.keyboard, player2Image, pov);
+            var player = new Player(message.userId, message.userTileRow, message.userTileCol, this.keyboard, player2Image, message.pov, message.shareVision, socket);
             this.level.addEntity(player);
-            if (pov) {
+            if (message.pov) {
                 this.camera.setCameraPosition((-player.pixelx + 64 * 3) * this.drawCtx.scale, (-player.pixely + 64 * 10) * this.drawCtx.scale);
             }
         });
 
-        socket.on("remove-player", (playerId: string) => {
+        socket.on('remove-player', (playerId: string) => {
             this.level.removeEntityById(playerId);
             this.level.needsRedraw = true;
+        });
+
+        socket.on('move-player', (userId: string, targetTileRow: number, targetTileCol: number) => {
+            let player = this.level.entities.find(x => x.id == userId) as Player;
+            if (!player) return;
+
+            player.currentMovePath = this.level.findPath(player.tileRow, player.tileCol, targetTileRow, targetTileCol);
+        });
+
+        socket.on('stop-player', (userId: string, targetTileRow: number, targetTileCol: number) => {
+            let player = this.level.entities.find(x => x.id == userId) as Player;
+            if (!player) return;
+
+            player.stopPathMovement();
+            player.currentMovePath = this.level.findPath(player.tileRow, player.tileCol, targetTileRow, targetTileCol);
         });
     }
 
