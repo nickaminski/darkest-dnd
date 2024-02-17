@@ -14,9 +14,10 @@ let userConnections: UserConnection[] = [];
 var os = require('os');
 var networkInterfaces = os.networkInterfaces();
 const networkIpAddress = networkInterfaces['Wi-Fi 4'].find((x: any) => x.family == 'IPv4').address;
+const useAdmin = true;
 
 io.on('connection', (socket) => {
-    let firstConnection = userConnections.length == 0;
+    let firstConnection = useAdmin && userConnections.length == 0;
     const ip = socket.conn.remoteAddress.split(":")[3]; // when behind proxy: socket.handshake.headers['x-forwarded-for']
     let user = userConnections.find(x => x.ipAddress == ip);
     if (!user){

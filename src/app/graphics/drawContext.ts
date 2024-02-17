@@ -62,29 +62,28 @@ export class DrawContext {
 
     drawTile(tileRow: number, tileCol: number, width: number, height: number, tileHex: string, brightness: BrightnessLevel){
         this.ctx.save();
-        if (tileHex == '000000ff') {
-            if (brightness == BrightnessLevel.Explored)
-                this.ctx.fillStyle = `#101010ff`;
-            else
-                this.ctx.fillStyle = `#000000ff`;
+        if (brightness == BrightnessLevel.Dark) {
+            this.ctx.fillStyle = '#000000ff';
             this.ctx.fillRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
-        } else if (tileHex == 'ffffffff') {
-            if (brightness == BrightnessLevel.Dark) {
-                this.ctx.fillStyle = `#000000ff`;
-                this.ctx.fillRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
-            } else if (brightness == BrightnessLevel.Explored) {
-                this.ctx.strokeRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
-                this.ctx.fillStyle = `#3d3d3dff`;
-                this.ctx.fillRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
-            } else if (brightness == BrightnessLevel.Dim) {
-                this.ctx.strokeRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
-                this.ctx.fillStyle = `#757575ff`;
-                this.ctx.fillRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
-            } else {
-                this.ctx.strokeRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
-                this.ctx.fillStyle = `#ffffffff`;
-                this.ctx.fillRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
-            } 
+        } else {
+            switch(tileHex)
+            {
+                case '000000ff': this.ctx.fillStyle = '#333333ff'; break;
+                case 'ffffffff': this.ctx.fillStyle = '#ffffffff'; break;
+            }
+            this.ctx.strokeRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
+            this.ctx.fillRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
+
+            if (tileHex != '000000ff')
+            {
+                if (brightness == BrightnessLevel.Explored) {
+                    this.ctx.fillStyle = '#000000aa';
+                    this.ctx.fillRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
+                } else if (brightness == BrightnessLevel.Dim) {
+                    this.ctx.fillStyle = '#00000066';
+                    this.ctx.fillRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
+                }
+            }
         }
         this.ctx.restore();
     }

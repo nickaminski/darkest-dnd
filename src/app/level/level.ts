@@ -161,16 +161,16 @@ export class Level {
         return this.pixelHexValues[x + y * this.width];
     }
 
-    getBrightness(y: number, x: number): number {
+    getBrightness(row: number, col: number): number {
         if (!this.DEBUG_USE_BRIGHTNESS) return BrightnessLevel.Radiant;
 
-        if (y < 0 || y >= this.height || x < 0 || x >= this.width) return BrightnessLevel.Dark;
+        if (row < 0 || row >= this.height || col < 0 || col >= this.width) return BrightnessLevel.Dark;
 
-        if (this.tileMap[y][x].explored && this.tileMap[y][x].brightness == BrightnessLevel.Dark) {
+        if (this.tileMap[row][col].explored && this.tileMap[row][col].brightness < BrightnessLevel.Dim) {
             return BrightnessLevel.Explored;
         }
 
-        return this.tileMap[y][x].brightness;
+        return this.tileMap[row][col].brightness;
     }
 
     findPath(startTileRow: number, startTileCol: number, goalTileRow: number, goalTileCol: number): PathfindingNode[] {
