@@ -36,11 +36,13 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('initialize-player', { userId: user.id, userTileRow: user.currentTileRow, userTileCol: user.currentTileCol, pov: false, shareVision: true, admin: false});
     }
     
-
     // initialize existing connections to the newly connected client
     for(let u of userConnections)
     {
-        if (u.admin) continue;
+        if (u.admin && userConnections.length > 1) {
+            // admin is first to connect, so allow admin's client to initialize itself. but other clients don't need to initialize the admin player object
+            continue;
+        }
         const me = u.id == user.id;
         socket.emit('initialize-player', { userId: u.id, userTileRow: u.currentTileRow, userTileCol: u.currentTileCol, pov: me, shareVision: true, admin: u.admin});
     }
