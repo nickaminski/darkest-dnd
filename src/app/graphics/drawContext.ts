@@ -62,10 +62,8 @@ export class DrawContext {
 
     drawTile(tileRow: number, tileCol: number, width: number, height: number, tileHex: string, brightness: BrightnessLevel){
         this.ctx.save();
-        if (brightness == BrightnessLevel.Dark) {
-            this.ctx.fillStyle = '#000000ff';
-            this.ctx.fillRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
-        } else {
+        if (brightness != BrightnessLevel.Dark) {
+            // screen is cleared with black, so we dont need to draw black squares for darkness
             switch(tileHex)
             {
                 case '000000ff': this.ctx.fillStyle = '#333333ff'; break;
