@@ -7,6 +7,9 @@ import { BrightnessLevel } from "../level/tile/brightness";
 import { Tile } from "../level/tile/tile";
 import { Entity } from "./entity";
 
+import boneRabbleImage from '../../assets/tokens/Bone_Rabble.png';
+import ancestorImage from '../../assets/tokens/Ancestor.png';
+
 export class Player implements Entity {
     id: string;
     pixelx: number;
@@ -27,7 +30,7 @@ export class Player implements Entity {
     currentMovePath: PathfindingNode[];
     moving = false;
 
-    constructor(playerId: string, startTileRow: number, startTileCol: number, keyboard: Keyboard, imgSrc: any, pov: boolean, shareVision: boolean, socket: Socket) {
+    constructor(playerId: string, startTileRow: number, startTileCol: number, keyboard: Keyboard, imageName: string, pov: boolean, shareVision: boolean, socket: Socket) {
         this.id = playerId;
         this.tileRow = startTileRow;
         this.tileCol = startTileCol;
@@ -35,7 +38,14 @@ export class Player implements Entity {
         this.pixely = this.tileRow << Tile.TileSizeShift;
         this.keyboard = keyboard;
         this.image = new Image();
-        this.image.src = imgSrc;
+        
+        switch(imageName)
+        {
+            case 'ancestor': this.image.src = ancestorImage; break;
+            case 'bone_rabble': this.image.src = boneRabbleImage; break;
+            default: this.image.src = ancestorImage;
+        }
+
         this.pov = pov;
         this.shareVision = shareVision;
         this.socket = socket;
@@ -49,7 +59,7 @@ export class Player implements Entity {
         this.calculateVision(this.level.tileMap);
         if (this.pov) {
             if (this.keyboard.stopPlayerMovement && this.currentMovePath?.length > 0) {
-                this.socket.emit('stopped', { tileRow: this.tileRow, tileCol: this.tileCol });
+                this.socket.emit('stopped', { id: this.id, tileRow: this.tileRow, tileCol: this.tileCol });
                 this.stopPathMovement();
             }
         }
@@ -62,7 +72,8 @@ export class Player implements Entity {
     }
 
     render(drawCtx: DrawContext) {
-        drawCtx.drawImage(this.pixelx, this.pixely, this.image, Tile.TileSize, Tile.TileSize);
+        if (this.level.getBrightness(this.tileRow, this.tileCol) >= BrightnessLevel.Dim)
+            drawCtx.drawImage(this.pixelx, this.pixely, this.image, Tile.TileSize, Tile.TileSize);
     }
 
     move(delta: number) {
@@ -90,12 +101,12 @@ export class Player implements Entity {
     }
 
     calculateVision(tileMap: Tile[][]) {
+        if (!this.shareVision) return;
         this.floodVision(0, this.tileRow, this.tileCol, tileMap);
     }
 
     private floodVision(lightStep: number, tileRow: number, tileCol: number, tileMap: Tile[][]) {
         if (tileRow < 0 || tileCol < 0 || tileRow >= tileMap.length || tileCol >= tileMap[0].length) return;
-        if (!this.shareVision) return;
         if (lightStep == this.dimLightDistance + this.radiantLightDistance) return;
 
         tileMap[tileRow][tileCol].explored = true;

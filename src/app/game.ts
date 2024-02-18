@@ -4,10 +4,8 @@ import { Level } from './level/level';
 import { Keyboard } from './input/keyboard';
 import { Camera } from './entity/camera';
 import { Player } from './entity/player';
-
 import levelImage from '../assets/maps/test.png';
-import playerImage from '../assets/tokens/Wilbur.png';
-import player2Image from '../assets/tokens/Ancestor.png';
+
 import { Socket } from 'socket.io-client';
 
 export class Game {
@@ -91,7 +89,7 @@ export class Game {
                 return;
             }
 
-            var player = new Player(message.userId, message.userTileRow, message.userTileCol, this.keyboard, player2Image, message.pov, message.shareVision, socket);
+            var player = new Player(message.userId, message.userTileRow, message.userTileCol, this.keyboard, message.imageName, message.pov, message.shareVision, socket);
             this.level.addEntity(player);
             if (message.pov) {
                 this.camera.setCameraPosition((-player.pixelx + 64 * 3) * this.drawCtx.scale, (-player.pixely + 64 * 10) * this.drawCtx.scale);

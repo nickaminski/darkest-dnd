@@ -16,14 +16,29 @@ var networkInterfaces = os.networkInterfaces();
 const networkIpAddress = networkInterfaces['Wi-Fi 4'].find((x: any) => x.family == 'IPv4').address;
 const useAdmin = true;
 
+let enemies = [
+    { id: crypto.randomUUID(), imageName: 'bone_rabble', currentTileRow: 47, currentTileCol: 5 },
+    { id: crypto.randomUUID(), imageName: 'bone_rabble', currentTileRow: 47, currentTileCol: 7 }
+];
+
 io.on('connection', (socket) => {
     let firstConnection = useAdmin && userConnections.length == 0;
     const ip = socket.conn.remoteAddress.split(":")[3]; // when behind proxy: socket.handshake.headers['x-forwarded-for']
     let user = userConnections.find(x => x.ipAddress == ip);
     if (!user){
         // actually a new user connecting for the first time
-        user = { id: crypto.randomUUID(), ipAddress: ip, socketIds: [socket.id], currentTileRow: 47, currentTileCol: 2, admin: firstConnection };
+        user = { id: crypto.randomUUID(), ipAddress: ip, socketIds: [socket.id], imageName: 'ancestor', currentTileRow: 47, currentTileCol: 2, admin: firstConnection, shareVision: true };
         userConnections.push(user);
+
+        if (firstConnection)
+        {
+            socket.emit('initialize-player', { userId: user.id, imageName: user.imageName, userTileRow: user.currentTileRow, userTileCol: user.currentTileCol, pov: false, shareVision: user.shareVision, admin: user.admin});
+            for(var i of enemies)
+            {
+                userConnections.push({ id: i.id, ipAddress: ip, socketIds: [], imageName: i.imageName, currentTileRow: i.currentTileRow, currentTileCol: i.currentTileCol, admin: false, shareVision: false});
+            }
+        }
+
         console.log(`A user connected from origin: ${ip} with id: ${socket.id}`);
     } else {
         // open another tab after connecting
@@ -34,18 +49,15 @@ io.on('connection', (socket) => {
     if (user.socketIds.length == 1)
     {
         // either an initial connection, or a re-connect after closing all instances/tabs so we want to let everyone know
-        socket.broadcast.emit('initialize-player', { userId: user.id, userTileRow: user.currentTileRow, userTileCol: user.currentTileCol, pov: false, shareVision: true, admin: false});
+        socket.broadcast.emit('initialize-player', { userId: user.id, imageName: user.imageName, userTileRow: user.currentTileRow, userTileCol: user.currentTileCol, pov: false, shareVision: true, admin: false});
     }
     
     // initialize existing connections to the newly connected client
     for(let u of userConnections)
     {
-        if (u.admin && userConnections.length > 1) {
-            // admin is first to connect, so allow admin's client to initialize itself. but other clients don't need to initialize the admin player object
-            continue;
-        }
+        if (u.admin) continue;
         const me = u.id == user.id;
-        socket.emit('initialize-player', { userId: u.id, userTileRow: u.currentTileRow, userTileCol: u.currentTileCol, pov: me, shareVision: true, admin: u.admin});
+        socket.emit('initialize-player', { userId: u.id, imageName: u.imageName, userTileRow: u.currentTileRow, userTileCol: u.currentTileCol, pov: me, shareVision: u.shareVision, admin: u.admin});
     }
 
     socket.on('disconnect', () => {
@@ -62,18 +74,29 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('click', (coordinate) => {
-        user.currentTileRow = coordinate.tileRow;
-        user.currentTileCol = coordinate.tileCol;
-        console.log(`User clicked at r:${coordinate.tileRow} c:${coordinate.tileCol} from origin: ${ip} with id: ${socket.id}`);
-        socket.broadcast.emit('move-player', user.id, user.currentTileRow, user.currentTileCol);
+    socket.on('click', (clickData) => {
+        // clickData needs id so admin can control different enemies
+        let target: { id: string, currentTileRow: number, currentTileCol: number } = userConnections.find(x => x.id == clickData.id);
+
+        target.currentTileRow = clickData.tileRow;
+        target.currentTileCol = clickData.tileCol;
+
+        console.log(`User clicked at r:${clickData.tileRow} c:${clickData.tileCol} from origin: ${ip} with id: ${socket.id}`);
+        socket.broadcast.emit('move-player', target.id, target.currentTileRow, target.currentTileCol);
+
+        console.log(user);
+        console.log(target);
     });
 
-    socket.on('stopped', (coordinate) => {
-        user.currentTileRow = coordinate.tileRow;
-        user.currentTileCol = coordinate.tileCol;
-        console.log(`User stopped at r:${coordinate.tileRow} c:${coordinate.tileCol} from origin: ${ip} with id: ${socket.id}`);
-        socket.broadcast.emit('stop-player', user.id, user.currentTileRow, user.currentTileCol);
+    socket.on('stopped', (clickData) => {
+        // clickData needs id so admin can control different enemies
+        let target: { id: string, currentTileRow: number, currentTileCol: number } = userConnections.find(x => x.id == clickData.id);
+
+        target.currentTileRow = clickData.tileRow;
+        target.currentTileCol = clickData.tileCol;
+
+        console.log(`User stopped at r:${clickData.tileRow} c:${clickData.tileCol} from origin: ${ip} with id: ${socket.id}`);
+        socket.broadcast.emit('stop-player', target.id, target.currentTileRow, target.currentTileCol);
     });
 });
 

@@ -78,7 +78,7 @@ export class Level {
                 var thePath = [...this.mouse.mousePath];
                 pov.currentMovePath = thePath;
 
-                socket.emit('click', {tileRow: thePath[0].tileRow, tileCol: thePath[0].tileCol});
+                socket.emit('click', {id: pov.id, tileRow: thePath[0].tileRow, tileCol: thePath[0].tileCol});
             }
         });
     }
