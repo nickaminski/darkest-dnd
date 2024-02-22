@@ -100,6 +100,7 @@ export class Game {
             npcs[idx].pov = false;
             npcs[(idx + 1) % npcs.length].pov = true;
         }
+        this.level.recalculateMousePath = true;
         this.level.needsRedraw = true;
     }
 
@@ -109,6 +110,7 @@ export class Game {
             if (message.admin) 
             {
                 this.admin = true;
+                this.level.admin = true;
                 this.level.DEBUG_USE_BRIGHTNESS = false;
                 return;
             }

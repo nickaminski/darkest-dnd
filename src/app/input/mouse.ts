@@ -16,8 +16,8 @@ export class Mouse {
     #x: number = 0;
     #y: number = 0;
 
-    tileX: number = 0;
-    tileY: number = 0;
+    tileCol: number = 0;
+    tileRow: number = 0;
     mousePath: PathfindingNode[];
 
     zoomRatio: number = 0.9;
@@ -51,14 +51,14 @@ export class Mouse {
     }
 
     public onMouseMove(e: MouseEvent, level: Level, drawContext: DrawContext) {
-        const oldX = this.tileX;
-        const oldY = this.tileY;
+        const oldX = this.tileCol;
+        const oldY = this.tileRow;
         this.x = e.clientX;
         this.y = e.clientY;
-        this.tileX = ((this.x - drawContext.transformX) / drawContext.scale) >> Tile.TileSizeShift;
-        this.tileY = ((this.y - drawContext.transformY) / drawContext.scale) >> Tile.TileSizeShift;
+        this.tileCol = ((this.x - drawContext.transformX) / drawContext.scale) >> Tile.TileSizeShift;
+        this.tileRow = ((this.y - drawContext.transformY) / drawContext.scale) >> Tile.TileSizeShift;
         level.needsRedraw = true;
-        if (oldX != this.tileX || oldY != this.tileY) {
+        if (oldX != this.tileCol || oldY != this.tileRow) {
             level.recalculateMousePath = true;
         }
     }

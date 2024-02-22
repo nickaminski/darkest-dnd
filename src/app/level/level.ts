@@ -17,6 +17,7 @@ export class Level {
     tileMap: Tile[][];
     needsRedraw: boolean = false;
     recalculateMousePath: boolean = false;
+    admin: boolean = false;
 
     DEBUG_USE_BRIGHTNESS = true;
     DEBUG_SHOW_TILE_LOC = false;
@@ -106,7 +107,7 @@ export class Level {
             var pov = this.entities.find(x => x instanceof Player && x.pov) as Player;
             if (pov)
             {
-                this.mouse.mousePath = this.findPath(pov.tileRow, pov.tileCol, this.mouse.tileY, this.mouse.tileX);
+                this.mouse.mousePath = this.findPath(pov.tileRow, pov.tileCol, this.mouse.tileRow, this.mouse.tileCol);
             }
         }
     }
@@ -138,7 +139,7 @@ export class Level {
             drawContext.ctx.fillStyle = 'blue';
             drawContext.ctx.font = '30px Arial';
             drawContext.ctx.fillText(`Tile offset: ${x0}, ${y0}`, 10, 50);
-            drawContext.ctx.fillText(`Hover tile: ${this.mouse.tileX}, ${this.mouse.tileY}`, 10, 100);
+            drawContext.ctx.fillText(`Hover tile: ${this.mouse.tileCol}, ${this.mouse.tileRow}`, 10, 100);
             drawContext.ctx.restore();
         }
         this.needsRedraw = false;
@@ -203,7 +204,7 @@ export class Level {
 
                     var tile = this.getTile(current.tileRow + i, current.tileCol + j);
                     if (tile == undefined || tile == null) continue;
-                    if (tile.isSolid || !tile.explored) continue;
+                    if (tile.isSolid || (!tile.explored && !this.admin)) continue;
 
                     var top = this.getTile(current.tileRow - 1, current.tileCol);
                     var bottom = this.getTile(current.tileRow + 1, current.tileCol);

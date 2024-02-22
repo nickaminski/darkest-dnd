@@ -75,7 +75,7 @@ export class Player implements Entity {
         if (this.level.getBrightness(this.tileRow, this.tileCol) >= BrightnessLevel.Dim)
             drawCtx.drawImage(this.pixelx, this.pixely, this.image, Tile.TileSize, Tile.TileSize);
 
-        if (this.pov && !this.shareVision)
+        if (this.pov)
         {
             drawCtx.highlightTile(this.tileRow, this.tileCol, '00ff00ff');
         }
