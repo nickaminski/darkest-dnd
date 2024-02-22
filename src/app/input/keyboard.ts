@@ -2,6 +2,8 @@ export class Keyboard {
 
     keys = new Map<string, boolean>();
 
+    didCycle = false;
+
     public get moveRight() {
         return this.keys.get('KeyD') || this.keys.get('ArrowRight');
     }
@@ -30,11 +32,16 @@ export class Keyboard {
         return this.keys.get('KeyL');
     }
 
+    public get cyclePov() {
+        return this.keys.get('KeyF');
+    }
+
     onKeyDown(e: KeyboardEvent) {
         this.keys.set(e.code, true);
     }
 
     onKeyUp(e: KeyboardEvent) {
         this.keys.set(e.code, false);
+        this.didCycle = false;
     }
 }

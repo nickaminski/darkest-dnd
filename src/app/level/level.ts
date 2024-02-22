@@ -48,16 +48,9 @@ export class Level {
             for (var i = 0; i < this.pixelHexValues.length; i++) {
                 var row = Math.floor(i/this.width);
                 var col = i%this.width;
-                var newTile = new Tile(row, col);
+                var newTile = new Tile(row, col, this.pixelHexValues[i]);
 
                 if (!this.tileMap[row]) this.tileMap[row] = [];
-
-                newTile.brightness = BrightnessLevel.Dark;
-                newTile.explored = false;
-
-                if (this.pixelHexValues[i] == '000000ff') {
-                    newTile.isSolid = true;
-                }
 
                 this.tileMap[row][col] = newTile;
             }

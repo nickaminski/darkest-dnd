@@ -16,8 +16,14 @@ export class Tile {
     isSolid: boolean;
     explored: boolean;
 
-    constructor(row: number, col: number) {
+    constructor(row: number, col: number, tileHex: string) {
         this.row = row;
         this.col = col;
+        this.brightness = BrightnessLevel.Dark;
+        this.explored = false;
+
+        if (tileHex == '000000ff') {
+            this.isSolid = true;
+        }
     }
 }

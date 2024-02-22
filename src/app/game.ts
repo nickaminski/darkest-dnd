@@ -68,6 +68,12 @@ export class Game {
                 this.level.DEBUG_USE_BRIGHTNESS = false;
                 this.level.needsRedraw = true;
             }
+
+            if (this.keyboard.cyclePov && !this.keyboard.didCycle)
+            {
+                this.keyboard.didCycle = true;
+                this.adminCyclePov();
+            }
         }
     }
 
@@ -77,6 +83,24 @@ export class Game {
 
     start(): void {
         this.running = true;
+    }
+
+    adminCyclePov(): void {
+        let players = this.level.entities.filter(x => x instanceof Player) as Player[];
+        let npcs = players.filter(x => !x.shareVision);
+        if (npcs.length == 0) return;
+
+        let idx = npcs.findIndex(x => x.pov);
+        if (idx == -1)
+        {
+            npcs[0].pov = true;
+        }
+        else
+        {
+            npcs[idx].pov = false;
+            npcs[(idx + 1) % npcs.length].pov = true;
+        }
+        this.level.needsRedraw = true;
     }
 
     registerSocketListeningEvents(socket: any): void {
@@ -108,12 +132,11 @@ export class Game {
             player.currentMovePath = this.level.findPath(player.tileRow, player.tileCol, targetTileRow, targetTileCol);
         });
 
-        socket.on('stop-player', (userId: string, targetTileRow: number, targetTileCol: number) => {
+        socket.on('stop-player', (userId: string) => {
             let player = this.level.entities.find(x => x.id == userId) as Player;
             if (!player) return;
 
             player.stopPathMovement();
-            player.currentMovePath = this.level.findPath(player.tileRow, player.tileCol, targetTileRow, targetTileCol);
         });
     }
 

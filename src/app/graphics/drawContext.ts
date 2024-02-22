@@ -60,6 +60,13 @@ export class DrawContext {
         this.#ctx.setTransform(t.a, 0, 0, t.d, tx, ty);
     }
 
+    highlightTile(tileRow: number, tileCol: number, colorHex: string) {
+        this.ctx.save();
+        this.ctx.strokeStyle = `#${colorHex}`;
+        this.ctx.strokeRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), Tile.TileSize, Tile.TileSize);
+        this.ctx.restore();
+    }
+
     drawTile(tileRow: number, tileCol: number, width: number, height: number, tileHex: string, brightness: BrightnessLevel){
         this.ctx.save();
         if (brightness != BrightnessLevel.Dark) {

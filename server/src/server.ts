@@ -25,17 +25,18 @@ io.on('connection', (socket) => {
     let firstConnection = useAdmin && userConnections.length == 0;
     const ip = socket.conn.remoteAddress.split(":")[3]; // when behind proxy: socket.handshake.headers['x-forwarded-for']
     let user = userConnections.find(x => x.ipAddress == ip);
-    if (!user){
+    if (!user) {
         // actually a new user connecting for the first time
         user = { id: crypto.randomUUID(), ipAddress: ip, socketIds: [socket.id], imageName: 'ancestor', currentTileRow: 47, currentTileCol: 2, admin: firstConnection, shareVision: true };
         userConnections.push(user);
 
         if (firstConnection)
         {
+            // spawn admin player to admin client
             socket.emit('initialize-player', { userId: user.id, imageName: user.imageName, userTileRow: user.currentTileRow, userTileCol: user.currentTileCol, pov: false, shareVision: user.shareVision, admin: user.admin});
             for(var i of enemies)
             {
-                userConnections.push({ id: i.id, ipAddress: ip, socketIds: [], imageName: i.imageName, currentTileRow: i.currentTileRow, currentTileCol: i.currentTileCol, admin: false, shareVision: false});
+                userConnections.push({ id: i.id, ipAddress: ip, socketIds: [socket.id], imageName: i.imageName, currentTileRow: i.currentTileRow, currentTileCol: i.currentTileCol, admin: false, shareVision: false});
             }
         }
 
@@ -46,7 +47,7 @@ io.on('connection', (socket) => {
         console.log(`Duplicate connection from user with origin: ${user.ipAddress} with id: ${socket.id}`);
     }
 
-    if (user.socketIds.length == 1)
+    if (user.socketIds.length == 1 && !user.admin)
     {
         // either an initial connection, or a re-connect after closing all instances/tabs so we want to let everyone know
         socket.broadcast.emit('initialize-player', { userId: user.id, imageName: user.imageName, userTileRow: user.currentTileRow, userTileCol: user.currentTileCol, pov: false, shareVision: true, admin: false});
@@ -55,7 +56,7 @@ io.on('connection', (socket) => {
     // initialize existing connections to the newly connected client
     for(let u of userConnections)
     {
-        if (u.admin) continue;
+        if (u.admin && u.id != user.id) continue;
         const me = u.id == user.id;
         socket.emit('initialize-player', { userId: u.id, imageName: u.imageName, userTileRow: u.currentTileRow, userTileCol: u.currentTileCol, pov: me, shareVision: u.shareVision, admin: u.admin});
     }
@@ -83,9 +84,6 @@ io.on('connection', (socket) => {
 
         console.log(`User clicked at r:${clickData.tileRow} c:${clickData.tileCol} from origin: ${ip} with id: ${socket.id}`);
         socket.broadcast.emit('move-player', target.id, target.currentTileRow, target.currentTileCol);
-
-        console.log(user);
-        console.log(target);
     });
 
     socket.on('stopped', (clickData) => {
@@ -96,7 +94,7 @@ io.on('connection', (socket) => {
         target.currentTileCol = clickData.tileCol;
 
         console.log(`User stopped at r:${clickData.tileRow} c:${clickData.tileCol} from origin: ${ip} with id: ${socket.id}`);
-        socket.broadcast.emit('stop-player', target.id, target.currentTileRow, target.currentTileCol);
+        socket.broadcast.emit('stop-player', target.id);
     });
 });
 

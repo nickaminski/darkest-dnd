@@ -59,8 +59,8 @@ export class Player implements Entity {
         this.calculateVision(this.level.tileMap);
         if (this.pov) {
             if (this.keyboard.stopPlayerMovement && this.currentMovePath?.length > 0) {
-                this.socket.emit('stopped', { id: this.id, tileRow: this.tileRow, tileCol: this.tileCol });
                 this.stopPathMovement();
+                this.socket.emit('stopped', { id: this.id });
             }
         }
         if (this.currentMovePath?.length > 0) {
@@ -74,6 +74,11 @@ export class Player implements Entity {
     render(drawCtx: DrawContext) {
         if (this.level.getBrightness(this.tileRow, this.tileCol) >= BrightnessLevel.Dim)
             drawCtx.drawImage(this.pixelx, this.pixely, this.image, Tile.TileSize, Tile.TileSize);
+
+        if (this.pov && !this.shareVision)
+        {
+            drawCtx.highlightTile(this.tileRow, this.tileCol, '00ff00ff');
+        }
     }
 
     move(delta: number) {
