@@ -36,7 +36,20 @@ export class Keyboard {
         return this.keys.get('KeyF');
     }
 
+    public get cycleColor() {
+        return this.keys.get('KeyE');
+    }
+
+    public get placeColor() {
+        return this.keys.get('KeyR');
+    }
+
+    public get removePlayer() {
+        return this.keys.get('Escape');
+    }
+
     onKeyDown(e: KeyboardEvent) {
+        console.log(e.code);
         this.keys.set(e.code, true);
     }
 

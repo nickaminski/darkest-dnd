@@ -67,10 +67,11 @@ export class DrawContext {
         this.ctx.restore();
     }
 
-    drawTile(tileRow: number, tileCol: number, width: number, height: number, tileHex: string, brightness: BrightnessLevel){
+    drawTile(tileRow: number, tileCol: number, width: number, height: number, tileHex: string, paintOverColorHex: string, brightness: BrightnessLevel){
         this.ctx.save();
         if (brightness != BrightnessLevel.Dark) {
             // screen is cleared with black, so we dont need to draw black squares for darkness
+            
             switch(tileHex)
             {
                 case '000000ff': this.ctx.fillStyle = '#333333ff'; break;
@@ -78,6 +79,12 @@ export class DrawContext {
             }
             this.ctx.strokeRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
             this.ctx.fillRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
+
+            if (paintOverColorHex)
+            {
+                this.ctx.fillStyle = `#${paintOverColorHex}`;
+                this.ctx.fillRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
+            }
 
             if (tileHex != '000000ff')
             {

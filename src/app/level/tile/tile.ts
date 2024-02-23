@@ -15,6 +15,7 @@ export class Tile {
     brightness: BrightnessLevel;
     isSolid: boolean;
     explored: boolean;
+    paintOverColorHex: string;
 
     constructor(row: number, col: number, tileHex: string) {
         this.row = row;

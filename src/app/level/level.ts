@@ -67,12 +67,12 @@ export class Level {
         }
 
         this.mouse.$mouseClick.subscribe(e=> {
-            if(this.mouse.mousePath) {
+            if(this.mouse.mousePath && this.mouse.mousePath.length > 0) {
                 var pov = this.entities.find(x => x instanceof Player && x.pov) as Player;
                 var thePath = [...this.mouse.mousePath];
                 pov.currentMovePath = thePath;
 
-                socket.emit('click', {id: pov.id, tileRow: thePath[0].tileRow, tileCol: thePath[0].tileCol});
+                socket.emit('click', {id: pov.id, path: thePath });
             }
         });
     }
@@ -109,6 +109,10 @@ export class Level {
             {
                 this.mouse.mousePath = this.findPath(pov.tileRow, pov.tileCol, this.mouse.tileRow, this.mouse.tileCol);
             }
+            else
+            {
+                this.mouse.mousePath = [];
+            }
         }
     }
 
@@ -124,7 +128,8 @@ export class Level {
 
         for (var y = y0; y < y1; y++) {
             for (var x = x0; x < x1; x++) {
-                drawContext.drawTile(y, x, Tile.TileSize, Tile.TileSize, this.getTileHex(y, x), this.getBrightness(y, x));
+                let tile = this.getTile(y, x);
+                drawContext.drawTile(y, x, Tile.TileSize, Tile.TileSize, this.getTileHex(y, x), tile?.paintOverColorHex, this.getBrightness(y, x));
             }
         }
 
@@ -153,6 +158,14 @@ export class Level {
     getTileHex(y: number, x: number): string {
         if (y < 0 || y >= this.height || x < 0 || x >= this.width) return '-1';
         return this.pixelHexValues[x + y * this.width];
+    }
+
+    paintTile(row: number, col: number, colorHex: string) {
+        let tile = this.getTile(row, col);
+        if (tile)
+        {
+            tile.paintOverColorHex = colorHex;
+        }
     }
 
     getBrightness(row: number, col: number): number {
@@ -205,7 +218,7 @@ export class Level {
                     var tile = this.getTile(current.tileRow + i, current.tileCol + j);
                     if (tile == undefined || tile == null) continue;
                     if (tile.isSolid || (!tile.explored && !this.admin)) continue;
-
+                    
                     var top = this.getTile(current.tileRow - 1, current.tileCol);
                     var bottom = this.getTile(current.tileRow + 1, current.tileCol);
                     var left = this.getTile(current.tileRow, current.tileCol - 1);

@@ -79,11 +79,10 @@ io.on('connection', (socket) => {
         // clickData needs id so admin can control different enemies
         let target: { id: string, currentTileRow: number, currentTileCol: number } = userConnections.find(x => x.id == clickData.id);
 
-        target.currentTileRow = clickData.tileRow;
-        target.currentTileCol = clickData.tileCol;
+        target.currentTileRow = clickData.path[0].tileRow;
+        target.currentTileCol = clickData.path[0].tileCol;
 
-        console.log(`User clicked at r:${clickData.tileRow} c:${clickData.tileCol} from origin: ${ip} with id: ${socket.id}`);
-        socket.broadcast.emit('move-player', target.id, target.currentTileRow, target.currentTileCol);
+        socket.broadcast.emit('move-player', { id: target.id, path: clickData.path } );
     });
 
     socket.on('stopped', (clickData) => {
@@ -95,6 +94,19 @@ io.on('connection', (socket) => {
 
         console.log(`User stopped at r:${clickData.tileRow} c:${clickData.tileCol} from origin: ${ip} with id: ${socket.id}`);
         socket.broadcast.emit('stop-player', target.id);
+    });
+
+    socket.on('admin-paint', (paintData) => {
+        socket.broadcast.emit('on-admin-paint', paintData);
+    });
+
+    socket.on('despawn-player', (id) => {
+        let idx = userConnections.findIndex(x => x.id == id);
+        if (idx != -1)
+        {
+            userConnections.splice(idx, 1);
+        }
+        socket.broadcast.emit('on-despawn-player', id);
     });
 });
 

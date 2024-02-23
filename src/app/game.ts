@@ -7,8 +7,11 @@ import { Player } from './entity/player';
 import levelImage from '../assets/maps/test.png';
 
 import { Socket } from 'socket.io-client';
+import { PathfindingNode } from './level/pathfindingNode';
 
 export class Game {
+    socket: Socket;
+
     running: boolean = false;
     #width: number;
     #height: number;
@@ -19,6 +22,8 @@ export class Game {
     camera: Camera;
 
     admin: boolean = false;
+    adminCurrentColorIdx: number = 0;
+    adminPaintColors = ['', '000000', 'ffffff', 'a300d5'];
 
     public set width(newVal: number) {
         this.#width = newVal;
@@ -42,6 +47,7 @@ export class Game {
         this.camera = new Camera(this.keyboard, this.drawCtx);
         this.mouse = new Mouse(this.keyboard);
         this.level = new Level(levelImage, this.mouse, socket);
+        this.socket = socket;
 
         document.addEventListener('mousemove', (e) => this.mouse.onMouseMove(e, this.level, this.drawCtx));
         document.addEventListener('wheel', (e) => this.mouse.onMouseWheel(e, this.drawCtx, this.level, this.camera));
@@ -49,7 +55,7 @@ export class Game {
         document.addEventListener('keyup', (e) => this.keyboard.onKeyUp(e));
         document.addEventListener('click', (e) => this.mouse.onMouseClick(e));
 
-        this.registerSocketListeningEvents(socket);
+        this.registerSocketListeningEvents();
     }
 
     update(delta: number): void {
@@ -73,6 +79,31 @@ export class Game {
             {
                 this.keyboard.didCycle = true;
                 this.adminCyclePov();
+            }
+
+            if (this.keyboard.cycleColor && !this.keyboard.didCycle)
+            {
+                this.keyboard.didCycle = true;
+                this.adminCurrentColorIdx = (this.adminCurrentColorIdx + 1) % this.adminPaintColors.length;
+                console.log(`current paint color: ${this.adminPaintColors[this.adminCurrentColorIdx]}`);
+            }
+
+            if (this.keyboard.placeColor && !this.keyboard.didCycle)
+            {
+                this.level.paintTile(this.mouse.tileRow, this.mouse.tileCol, this.adminPaintColors[this.adminCurrentColorIdx]);
+                this.level.needsRedraw = true;
+                this.socket.emit('admin-paint', { row: this.mouse.tileRow, col: this.mouse.tileCol, colorHex: this.adminPaintColors[this.adminCurrentColorIdx] });
+            }
+
+            if (this.keyboard.removePlayer && !this.keyboard.didCycle)
+            {
+                let pov = this.level.entities.find(x => x instanceof Player && x.pov);
+                if (pov)
+                {
+                    this.socket.emit('despawn-player', pov.id);
+                    this.level.removeEntityById(pov.id);
+                    this.level.needsRedraw = true;
+                }
             }
         }
     }
@@ -104,8 +135,8 @@ export class Game {
         this.level.needsRedraw = true;
     }
 
-    registerSocketListeningEvents(socket: any): void {
-        socket.on('initialize-player', (message: any) => {
+    registerSocketListeningEvents(): void {
+        this.socket.on('initialize-player', (message: any) => {
             this.level.needsRedraw = true;
             if (message.admin) 
             {
@@ -115,30 +146,40 @@ export class Game {
                 return;
             }
 
-            var player = new Player(message.userId, message.userTileRow, message.userTileCol, this.keyboard, message.imageName, message.pov, message.shareVision, socket);
+            var player = new Player(message.userId, message.userTileRow, message.userTileCol, this.keyboard, message.imageName, message.pov, message.shareVision, this.socket);
             this.level.addEntity(player);
             if (message.pov) {
                 this.camera.setCameraPosition((-player.pixelx + 64 * 3) * this.drawCtx.scale, (-player.pixely + 64 * 10) * this.drawCtx.scale);
             }
         });
 
-        socket.on('remove-player', (playerId: string) => {
+        this.socket.on('remove-player', (playerId: string) => {
             this.level.removeEntityById(playerId);
             this.level.needsRedraw = true;
         });
 
-        socket.on('move-player', (userId: string, targetTileRow: number, targetTileCol: number) => {
-            let player = this.level.entities.find(x => x.id == userId) as Player;
+        this.socket.on('move-player', (data) => {
+            let player = this.level.entities.find(x => x.id == data.id) as Player;
             if (!player) return;
 
-            player.currentMovePath = this.level.findPath(player.tileRow, player.tileCol, targetTileRow, targetTileCol);
+            player.currentMovePath = data.path;
         });
 
-        socket.on('stop-player', (userId: string) => {
+        this.socket.on('stop-player', (userId: string) => {
             let player = this.level.entities.find(x => x.id == userId) as Player;
             if (!player) return;
 
             player.stopPathMovement();
+        });
+
+        this.socket.on('on-admin-paint', (paintData) => {
+            this.level.paintTile(paintData.row, paintData.col, paintData.colorHex);
+            this.level.needsRedraw = true;
+        });
+
+        this.socket.on('on-despawn-player', (id) => {
+            this.level.removeEntityById(id);
+            this.level.needsRedraw = true;
         });
     }
 
