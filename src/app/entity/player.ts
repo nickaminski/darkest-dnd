@@ -6,9 +6,7 @@ import { PathfindingNode } from "../level/pathfindingNode";
 import { BrightnessLevel } from "../level/tile/brightness";
 import { Tile } from "../level/tile/tile";
 import { Entity } from "./entity";
-
-import boneRabbleImage from '../../assets/tokens/Bone_Rabble.png';
-import ancestorImage from '../../assets/tokens/Ancestor.png';
+import { ImageBank } from "../graphics/imageBank";
 
 export class Player implements Entity {
     id: string;
@@ -39,12 +37,7 @@ export class Player implements Entity {
         this.keyboard = keyboard;
         this.image = new Image();
         
-        switch(imageName)
-        {
-            case 'ancestor': this.image.src = ancestorImage; break;
-            case 'bone_rabble': this.image.src = boneRabbleImage; break;
-            default: this.image.src = ancestorImage;
-        }
+        this.image.src = ImageBank.getImageUrl(imageName);
 
         this.pov = pov;
         this.shareVision = shareVision;

@@ -21,13 +21,22 @@ let enemies = [
     { id: crypto.randomUUID(), imageName: 'bone_rabble', currentTileRow: 47, currentTileCol: 7 }
 ];
 
+let playerImages = [
+    'hellion',
+    'highwayman',
+    'jester',
+    'occultest'
+];
+let playerImageIdx = 0;
+
 io.on('connection', (socket) => {
     let firstConnection = useAdmin && userConnections.length == 0;
     const ip = socket.conn.remoteAddress.split(":")[3]; // when behind proxy: socket.handshake.headers['x-forwarded-for']
     let user = userConnections.find(x => x.ipAddress == ip);
     if (!user) {
         // actually a new user connecting for the first time
-        user = { id: crypto.randomUUID(), ipAddress: ip, socketIds: [socket.id], imageName: 'ancestor', currentTileRow: 47, currentTileCol: 2, admin: firstConnection, shareVision: true };
+        user = { id: crypto.randomUUID(), ipAddress: ip, socketIds: [socket.id], imageName: playerImages[playerImageIdx], currentTileRow: 47, currentTileCol: 2, admin: firstConnection, shareVision: true };
+        playerImageIdx = (playerImageIdx + 1) % playerImages.length;
         userConnections.push(user);
 
         if (firstConnection)
