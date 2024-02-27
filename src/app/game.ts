@@ -23,7 +23,7 @@ export class Game {
 
     admin: boolean = false;
     adminCurrentColorIdx: number = 0;
-    adminPaintColors = ['', '000000', 'ffffff', 'a300d5'];
+    adminPaintColors = [ { hex: '', name: 'clear' }, { hex: '000000', name: 'black'}, { hex: 'a300d5', name: 'trap'} ];
 
     public set width(newVal: number) {
         this.#width = newVal;
@@ -64,47 +64,7 @@ export class Game {
 
         if (this.admin)
         {
-            if (this.keyboard.toggleLights && !this.level.DEBUG_USE_BRIGHTNESS)
-            {
-                this.level.DEBUG_USE_BRIGHTNESS = true;
-                this.level.needsRedraw = true;
-            }
-            else if (!this.keyboard.toggleLights && this.level.DEBUG_USE_BRIGHTNESS)
-            {
-                this.level.DEBUG_USE_BRIGHTNESS = false;
-                this.level.needsRedraw = true;
-            }
-
-            if (this.keyboard.cyclePov && !this.keyboard.didCycle)
-            {
-                this.keyboard.didCycle = true;
-                this.adminCyclePov();
-            }
-
-            if (this.keyboard.cycleColor && !this.keyboard.didCycle)
-            {
-                this.keyboard.didCycle = true;
-                this.adminCurrentColorIdx = (this.adminCurrentColorIdx + 1) % this.adminPaintColors.length;
-                console.log(`current paint color: ${this.adminPaintColors[this.adminCurrentColorIdx]}`);
-            }
-
-            if (this.keyboard.placeColor && !this.keyboard.didCycle)
-            {
-                this.level.paintTile(this.mouse.tileRow, this.mouse.tileCol, this.adminPaintColors[this.adminCurrentColorIdx]);
-                this.level.needsRedraw = true;
-                this.socket.emit('admin-paint', { row: this.mouse.tileRow, col: this.mouse.tileCol, colorHex: this.adminPaintColors[this.adminCurrentColorIdx] });
-            }
-
-            if (this.keyboard.removePlayer && !this.keyboard.didCycle)
-            {
-                let pov = this.level.entities.find(x => x instanceof Player && x.pov);
-                if (pov)
-                {
-                    this.socket.emit('despawn-player', pov.id);
-                    this.level.removeEntityById(pov.id);
-                    this.level.needsRedraw = true;
-                }
-            }
+            this.handleAminControls();
         }
     }
 
@@ -122,15 +82,16 @@ export class Game {
         if (npcs.length == 0) return;
 
         let idx = npcs.findIndex(x => x.pov);
-        if (idx == -1)
-        {
-            npcs[0].pov = true;
-        }
-        else
+        if (idx != -1)
         {
             npcs[idx].pov = false;
-            npcs[(idx + 1) % npcs.length].pov = true;
         }
+        idx = npcs.findIndex(x => x.tileCol == this.mouse.tileCol && x.tileRow == this.mouse.tileRow);
+        if (idx != -1)
+        {
+            npcs[idx].pov = true;
+        }
+
         this.level.recalculateMousePath = true;
         this.level.needsRedraw = true;
     }
@@ -181,6 +142,51 @@ export class Game {
             this.level.removeEntityById(id);
             this.level.needsRedraw = true;
         });
+    }
+
+    handleAminControls(): void {
+        if (this.keyboard.toggleLights && !this.level.DEBUG_USE_BRIGHTNESS)
+            {
+                this.level.DEBUG_USE_BRIGHTNESS = true;
+                this.level.needsRedraw = true;
+            }
+            else if (!this.keyboard.toggleLights && this.level.DEBUG_USE_BRIGHTNESS)
+            {
+                this.level.DEBUG_USE_BRIGHTNESS = false;
+                this.level.needsRedraw = true;
+            }
+
+            if (this.keyboard.cyclePov && !this.keyboard.didCycle)
+            {
+                this.keyboard.didCycle = true;
+                this.adminCyclePov();
+            }
+
+            if (this.keyboard.cycleColor && !this.keyboard.didCycle)
+            {
+                this.keyboard.didCycle = true;
+                this.adminCurrentColorIdx = (this.adminCurrentColorIdx + 1) % this.adminPaintColors.length;
+                console.log(`current paint color: ${this.adminPaintColors[this.adminCurrentColorIdx].name}`);
+            }
+
+            if (this.keyboard.placeColor && !this.keyboard.didCycle)
+            {
+                this.level.paintTile(this.mouse.tileRow, this.mouse.tileCol, this.adminPaintColors[this.adminCurrentColorIdx].hex);
+                this.level.needsRedraw = true;
+                this.socket.emit('admin-paint', { row: this.mouse.tileRow, col: this.mouse.tileCol, colorHex: this.adminPaintColors[this.adminCurrentColorIdx].hex });
+            }
+
+            if (this.keyboard.removePlayer && !this.keyboard.didCycle)
+            {
+                let pov = this.level.entities.find(x => x instanceof Player && x.pov);
+                if (pov)
+                {
+                    this.socket.emit('despawn-player', pov.id);
+                    this.level.removeEntityById(pov.id);
+                    this.level.needsRedraw = true;
+                    this.level.recalculateMousePath = true;
+                }
+            }
     }
 
 }

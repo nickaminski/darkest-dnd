@@ -49,7 +49,6 @@ export class Keyboard {
     }
 
     onKeyDown(e: KeyboardEvent) {
-        console.log(e.code);
         this.keys.set(e.code, true);
     }
 

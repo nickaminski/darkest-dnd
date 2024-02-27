@@ -66,6 +66,7 @@ io.on('connection', (socket) => {
     for(let u of userConnections)
     {
         if (u.admin && u.id != user.id) continue;
+        if (u.socketIds.length == 0) continue;
         const me = u.id == user.id;
         socket.emit('initialize-player', { userId: u.id, imageName: u.imageName, userTileRow: u.currentTileRow, userTileCol: u.currentTileCol, pov: me, shareVision: u.shareVision, admin: u.admin});
     }
