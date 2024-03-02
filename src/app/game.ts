@@ -4,10 +4,9 @@ import { Level } from './level/level';
 import { Keyboard } from './input/keyboard';
 import { Camera } from './entity/camera';
 import { Player } from './entity/player';
-import levelImage from '../assets/maps/test.png';
+import levelImage from '../assets/maps/ruins.png';
 
 import { Socket } from 'socket.io-client';
-import { PathfindingNode } from './level/pathfindingNode';
 
 export class Game {
     socket: Socket;
@@ -23,7 +22,12 @@ export class Game {
 
     admin: boolean = false;
     adminCurrentColorIdx: number = 0;
-    adminPaintColors = [ { hex: '', name: 'clear' }, { hex: '000000', name: 'black'}, { hex: 'a300d5', name: 'trap'} ];
+    adminPaintColors = [ { hex: '', name: 'clear' }, 
+                         { hex: '000000', name: 'black'}, 
+                         { hex: 'a300d5', name: 'trap'}, 
+                         { hex: '496bff', name: 'curio' }, 
+                         { hex: 'ff0000', name: 'red' }, 
+                         { hex: 'ffcc00', name: 'yellow' } ];
 
     public set width(newVal: number) {
         this.#width = newVal;

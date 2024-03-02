@@ -16,18 +16,98 @@ var networkInterfaces = os.networkInterfaces();
 const networkIpAddress = networkInterfaces['Wi-Fi 4'].find((x: any) => x.family == 'IPv4').address;
 const useAdmin = true;
 
-let enemies = [
-    { id: crypto.randomUUID(), imageName: 'bone_rabble', currentTileRow: 47, currentTileCol: 5 },
-    { id: crypto.randomUUID(), imageName: 'bone_rabble', currentTileRow: 47, currentTileCol: 7 }
+let oldRoadEnemies = [
+    { id: crypto.randomUUID(), imageName: 'bandit_fuselier', currentTileRow: 6, currentTileCol: 35 },
+    { id: crypto.randomUUID(), imageName: 'bandit_cutthroat', currentTileRow: 13, currentTileCol: 33 },
+    { id: crypto.randomUUID(), imageName: 'bandit_bloodletter', currentTileRow: 16, currentTileCol: 61 }
 ];
 
-let playerImages = [
-    'hellion',
-    'highwayman',
-    'jester',
-    'occultest'
+let wealdLv2Enemies = [
+    { id: crypto.randomUUID(), imageName: 'spitter', currentTileRow: 38, currentTileCol: 54 },
+    { id: crypto.randomUUID(), imageName: 'spitter', currentTileRow: 38, currentTileCol: 54 },
+    { id: crypto.randomUUID(), imageName: 'webber', currentTileRow: 38, currentTileCol: 54 },
+    { id: crypto.randomUUID(), imageName: 'webber', currentTileRow: 38, currentTileCol: 54 },
+    { id: crypto.randomUUID(), imageName: 'fungal_scratcher', currentTileRow: 73, currentTileCol: 42 },
+    { id: crypto.randomUUID(), imageName: 'fungal_scratcher', currentTileRow: 73, currentTileCol: 42 },
+    { id: crypto.randomUUID(), imageName: 'fungal_artillery', currentTileRow: 73, currentTileCol: 42 },
+    { id: crypto.randomUUID(), imageName: 'fungal_artillery', currentTileRow: 73, currentTileCol: 42 },
+    { id: crypto.randomUUID(), imageName: 'large_slime', currentTileRow: 42, currentTileCol: 144 },
+    { id: crypto.randomUUID(), imageName: 'large_slime', currentTileRow: 42, currentTileCol: 144 },
+    { id: crypto.randomUUID(), imageName: 'slime', currentTileRow: 39, currentTileCol: 138 },
+    { id: crypto.randomUUID(), imageName: 'slime', currentTileRow: 39, currentTileCol: 138 },
+    { id: crypto.randomUUID(), imageName: 'abomination', currentTileRow: 47, currentTileCol: 74 }
 ];
-let playerImageIdx = 0;
+
+let ruinsLv3Enemies = [
+    { id: crypto.randomUUID(), imageName: 'cultist_brawler', currentTileRow: 10, currentTileCol: 19 },
+    { id: crypto.randomUUID(), imageName: 'cultist_brawler', currentTileRow: 10, currentTileCol: 23 },
+    { id: crypto.randomUUID(), imageName: 'cultist_acolyte', currentTileRow: 4, currentTileCol: 19 },
+    { id: crypto.randomUUID(), imageName: 'cultist_acolyte', currentTileRow: 4, currentTileCol: 23 },
+    { id: crypto.randomUUID(), imageName: 'bone_soldier', currentTileRow: 13, currentTileCol: 42 },
+    { id: crypto.randomUUID(), imageName: 'bone_defender', currentTileRow: 15, currentTileCol: 39 },
+    { id: crypto.randomUUID(), imageName: 'bone_arbalist', currentTileRow: 12, currentTileCol: 46 },
+    { id: crypto.randomUUID(), imageName: 'bone_arbalist', currentTileRow: 16, currentTileCol: 46 },
+    { id: crypto.randomUUID(), imageName: 'bone_courtier', currentTileRow: 19, currentTileCol: 43 },
+    { id: crypto.randomUUID(), imageName: 'madman', currentTileRow: 43, currentTileCol: 7 },
+    { id: crypto.randomUUID(), imageName: 'madman', currentTileRow: 47, currentTileCol: 7 },
+    { id: crypto.randomUUID(), imageName: 'goul', currentTileRow: 45, currentTileCol: 30 },
+    { id: crypto.randomUUID(), imageName: 'bone_rabble', currentTileRow: 44, currentTileCol: 29 },
+    { id: crypto.randomUUID(), imageName: 'bone_rabble', currentTileRow: 42, currentTileCol: 28 },
+    { id: crypto.randomUUID(), imageName: 'bone_rabble', currentTileRow: 48, currentTileCol: 27 }
+];
+
+let ruinsLv4Enemies = [
+    { id: crypto.randomUUID(), imageName: 'gargoyle', currentTileRow: 14, currentTileCol: 64 },
+    { id: crypto.randomUUID(), imageName: 'gargoyle', currentTileRow: 14, currentTileCol: 61 },
+    { id: crypto.randomUUID(), imageName: 'gargoyle', currentTileRow: 17, currentTileCol: 64 },
+    { id: crypto.randomUUID(), imageName: 'gargoyle', currentTileRow: 17, currentTileCol: 61 },
+    { id: crypto.randomUUID(), imageName: 'gargoyle', currentTileRow: 19, currentTileCol: 51 },
+    { id: crypto.randomUUID(), imageName: 'gargoyle', currentTileRow: 24, currentTileCol: 51 },
+    { id: crypto.randomUUID(), imageName: 'gargoyle', currentTileRow: 24, currentTileCol: 54 },
+    { id: crypto.randomUUID(), imageName: 'gargoyle', currentTileRow: 24, currentTileCol: 57 },
+    { id: crypto.randomUUID(), imageName: 'gargoyle', currentTileRow: 19, currentTileCol: 54 },
+    { id: crypto.randomUUID(), imageName: 'collector', currentTileRow: 11, currentTileCol: 14 },
+    { id: crypto.randomUUID(), imageName: 'collected_rogue', currentTileRow: 2, currentTileCol: 32 },
+    { id: crypto.randomUUID(), imageName: 'collected_cleric', currentTileRow: 2, currentTileCol: 32 },
+    { id: crypto.randomUUID(), imageName: 'collected_warrior', currentTileRow: 2, currentTileCol: 32 },
+    { id: crypto.randomUUID(), imageName: 'prophet', currentTileRow: 41, currentTileCol: 28 },
+    { id: crypto.randomUUID(), imageName: 'madman', currentTileRow: 37, currentTileCol: 33 },
+    { id: crypto.randomUUID(), imageName: 'madman', currentTileRow: 40, currentTileCol: 30 },
+    { id: crypto.randomUUID(), imageName: 'cultist_acolyte', currentTileRow: 44, currentTileCol: 24 },
+    { id: crypto.randomUUID(), imageName: 'cultist_acolyte', currentTileRow: 39, currentTileCol: 22 }
+];
+
+let oldRoadPlayerSpawn = [
+    { image: 'highwayman', tileRow: 4, tileCol: 2 },
+    { image: 'hellion', tileRow: 2, tileCol: 2 },
+    { image: 'jester', tileRow: 2, tileCol: 4 },
+    { image: 'occultist', tileRow: 4, tileCol: 4 }
+];
+let wealdPlayerSpawn = [
+    { image: 'highwayman', tileRow: 48, tileCol: 2 },
+    { image: 'hellion', tileRow: 50, tileCol: 2 },
+    { image: 'jester', tileRow: 50, tileCol: 4 },
+    { image: 'occultist', tileRow: 48, tileCol: 4 }
+];
+
+let ruins1PlayerSpawn = [
+    { image: 'highwayman', tileRow: 1, tileCol: 9 },
+    { image: 'hellion', tileRow: 1, tileCol: 10 },
+    { image: 'jester', tileRow: 2, tileCol: 10 },
+    { image: 'occultist', tileRow: 2, tileCol: 10 }
+];
+
+let ruins2PlayerSpawn = [
+    { image: 'highwayman', tileRow: 1, tileCol: 61 },
+    { image: 'hellion', tileRow: 2, tileCol: 61 },
+    { image: 'jester', tileRow: 3, tileCol: 61 },
+    { image: 'occultist', tileRow: 4, tileCol: 61 }
+];
+
+let currentEnemies = oldRoadEnemies;
+let playerSpawnData = oldRoadPlayerSpawn;
+
+let playerIdx = 0;
 
 io.on('connection', (socket) => {
     let firstConnection = useAdmin && userConnections.length == 0;
@@ -35,15 +115,16 @@ io.on('connection', (socket) => {
     let user = userConnections.find(x => x.ipAddress == ip);
     if (!user) {
         // actually a new user connecting for the first time
-        user = { id: crypto.randomUUID(), ipAddress: ip, socketIds: [socket.id], imageName: playerImages[playerImageIdx], currentTileRow: 47, currentTileCol: 2, admin: firstConnection, shareVision: true };
-        playerImageIdx = (playerImageIdx + 1) % playerImages.length;
+        let spawnData = playerSpawnData[playerIdx]
+        user = { id: crypto.randomUUID(), ipAddress: ip, socketIds: [socket.id], imageName: spawnData.image, currentTileRow: spawnData.tileRow, currentTileCol: spawnData.tileCol, admin: firstConnection, shareVision: true };
+        playerIdx = (playerIdx + 1) % playerSpawnData.length;
         userConnections.push(user);
 
         if (firstConnection)
         {
             // spawn admin player to admin client
             socket.emit('initialize-player', { userId: user.id, imageName: user.imageName, userTileRow: user.currentTileRow, userTileCol: user.currentTileCol, pov: false, shareVision: user.shareVision, admin: user.admin});
-            for(var i of enemies)
+            for(var i of currentEnemies)
             {
                 userConnections.push({ id: i.id, ipAddress: ip, socketIds: [socket.id], imageName: i.imageName, currentTileRow: i.currentTileRow, currentTileCol: i.currentTileCol, admin: false, shareVision: false});
             }
