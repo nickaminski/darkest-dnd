@@ -39,21 +39,21 @@ let wealdLv2Enemies = [
 ];
 
 let ruinsLv3Enemies = [
-    { id: crypto.randomUUID(), imageName: 'cultist_brawler', currentTileRow: 10, currentTileCol: 19 },
-    { id: crypto.randomUUID(), imageName: 'cultist_brawler', currentTileRow: 10, currentTileCol: 23 },
-    { id: crypto.randomUUID(), imageName: 'cultist_acolyte', currentTileRow: 4, currentTileCol: 19 },
-    { id: crypto.randomUUID(), imageName: 'cultist_acolyte', currentTileRow: 4, currentTileCol: 23 },
-    { id: crypto.randomUUID(), imageName: 'bone_soldier', currentTileRow: 13, currentTileCol: 42 },
-    { id: crypto.randomUUID(), imageName: 'bone_defender', currentTileRow: 15, currentTileCol: 39 },
-    { id: crypto.randomUUID(), imageName: 'bone_arbalist', currentTileRow: 12, currentTileCol: 46 },
-    { id: crypto.randomUUID(), imageName: 'bone_arbalist', currentTileRow: 16, currentTileCol: 46 },
-    { id: crypto.randomUUID(), imageName: 'bone_courtier', currentTileRow: 19, currentTileCol: 43 },
-    { id: crypto.randomUUID(), imageName: 'madman', currentTileRow: 43, currentTileCol: 7 },
-    { id: crypto.randomUUID(), imageName: 'madman', currentTileRow: 47, currentTileCol: 7 },
-    { id: crypto.randomUUID(), imageName: 'goul', currentTileRow: 45, currentTileCol: 30 },
-    { id: crypto.randomUUID(), imageName: 'bone_rabble', currentTileRow: 44, currentTileCol: 29 },
-    { id: crypto.randomUUID(), imageName: 'bone_rabble', currentTileRow: 42, currentTileCol: 28 },
-    { id: crypto.randomUUID(), imageName: 'bone_rabble', currentTileRow: 48, currentTileCol: 27 }
+    { id: crypto.randomUUID(), imageName: 'cultist_brawler', currentTileRow: 18, currentTileCol: 19 },
+    { id: crypto.randomUUID(), imageName: 'cultist_brawler', currentTileRow: 18, currentTileCol: 23 },
+    { id: crypto.randomUUID(), imageName: 'cultist_acolyte', currentTileRow: 12, currentTileCol: 19 },
+    { id: crypto.randomUUID(), imageName: 'cultist_acolyte', currentTileRow: 12, currentTileCol: 23 },
+    { id: crypto.randomUUID(), imageName: 'bone_soldier', currentTileRow: 23, currentTileCol: 42 },
+    { id: crypto.randomUUID(), imageName: 'bone_defender', currentTileRow: 24, currentTileCol: 42 },
+    { id: crypto.randomUUID(), imageName: 'bone_arbalist', currentTileRow: 22, currentTileCol: 46 },
+    { id: crypto.randomUUID(), imageName: 'bone_arbalist', currentTileRow: 26, currentTileCol: 46 },
+    { id: crypto.randomUUID(), imageName: 'bone_courtier', currentTileRow: 29, currentTileCol: 43 },
+    { id: crypto.randomUUID(), imageName: 'madman', currentTileRow: 51, currentTileCol: 7 },
+    { id: crypto.randomUUID(), imageName: 'madman', currentTileRow: 55, currentTileCol: 7 },
+    { id: crypto.randomUUID(), imageName: 'goul', currentTileRow: 55, currentTileCol: 30 },
+    { id: crypto.randomUUID(), imageName: 'bone_rabble', currentTileRow: 54, currentTileCol: 29 },
+    { id: crypto.randomUUID(), imageName: 'bone_rabble', currentTileRow: 52, currentTileCol: 28 },
+    { id: crypto.randomUUID(), imageName: 'bone_rabble', currentTileRow: 58, currentTileCol: 27 }
 ];
 
 let ruinsLv4Enemies = [
@@ -104,8 +104,8 @@ let ruins2PlayerSpawn = [
     { image: 'occultist', tileRow: 4, tileCol: 61 }
 ];
 
-let currentEnemies = oldRoadEnemies;
-let playerSpawnData = oldRoadPlayerSpawn;
+let currentEnemies = ruinsLv3Enemies;
+let playerSpawnData = ruins1PlayerSpawn;
 
 let playerIdx = 0;
 
