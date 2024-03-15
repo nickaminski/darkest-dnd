@@ -64,6 +64,11 @@ export class Level {
                     e.calculateVision(this.tileMap);
                 }
             });
+
+            if (socket.connected)
+            {
+                socket.emit('create-game-state', { rows: this.height, cols: this.width });
+            }
         }
 
         this.mouse.$mouseClick.subscribe(e=> {
@@ -160,8 +165,8 @@ export class Level {
         return this.pixelHexValues[x + y * this.width];
     }
 
-    paintTile(row: number, col: number, colorHex: string) {
-        let tile = this.getTile(row, col);
+
+    paintTile(tile: Tile, colorHex: string) {
         if (tile)
         {
             tile.paintOverColorHex = colorHex;

@@ -101,6 +101,12 @@ export class Game {
     }
 
     registerSocketListeningEvents(): void {
+        this.socket.on('connect', () => {
+            if (this.level.loaded) {
+                this.socket.emit('create-game-state', { rows: this.level.height, cols: this.level.width });
+            }
+        });
+
         this.socket.on('initialize-player', (message: any) => {
             this.level.needsRedraw = true;
             if (message.admin) 
@@ -138,13 +144,26 @@ export class Game {
         });
 
         this.socket.on('on-admin-paint', (paintData) => {
-            this.level.paintTile(paintData.row, paintData.col, paintData.colorHex);
+            
+            this.level.paintTile(this.level.getTile(paintData.row, paintData.col), paintData.colorHex);
             this.level.needsRedraw = true;
         });
 
         this.socket.on('on-despawn-player', (id) => {
             this.level.removeEntityById(id);
             this.level.needsRedraw = true;
+        });
+
+        this.socket.on('receive-game-state', (gameState) => {
+            if (this.level.loaded)
+            {
+                for(let r = 0; r < this.level.height; r++) {
+                    for(let c = 0; c < this.level.width; c++) {
+                        let tile = gameState.tiles[r][c];
+                        this.level.paintTile(this.level.getTile(r, c), tile.paintOverColorHex);
+                    }
+                }
+            }
         });
     }
 
@@ -175,9 +194,13 @@ export class Game {
 
             if (this.keyboard.placeColor && !this.keyboard.didCycle)
             {
-                this.level.paintTile(this.mouse.tileRow, this.mouse.tileCol, this.adminPaintColors[this.adminCurrentColorIdx].hex);
-                this.level.needsRedraw = true;
-                this.socket.emit('admin-paint', { row: this.mouse.tileRow, col: this.mouse.tileCol, colorHex: this.adminPaintColors[this.adminCurrentColorIdx].hex });
+                let tile = this.level.getTile(this.mouse.tileRow, this.mouse.tileCol);
+                if (tile)
+                {
+                    this.level.paintTile(tile, this.adminPaintColors[this.adminCurrentColorIdx].hex);
+                    this.level.needsRedraw = true;
+                    this.socket.emit('admin-paint', { row: this.mouse.tileRow, col: this.mouse.tileCol, colorHex: this.adminPaintColors[this.adminCurrentColorIdx].hex });
+                }
             }
 
             if (this.keyboard.removePlayer && !this.keyboard.didCycle)

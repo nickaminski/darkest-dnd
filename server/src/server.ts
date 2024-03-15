@@ -1,7 +1,10 @@
 // src/server.ts
 import * as http from 'http';
 import { Server } from "socket.io";
-import { UserConnection } from './userConnection';
+import { UserConnection } from './models/userConnection';
+import { SpawnData } from './models/spawnData';
+import { first } from 'rxjs';
+import { GameState } from './models/gameState';
 
 const server = http.createServer();
 const PORT = process.env.PORT || 3000;
@@ -77,31 +80,31 @@ let ruinsLv4Enemies = [
     { id: crypto.randomUUID(), imageName: 'cultist_acolyte', currentTileRow: 39, currentTileCol: 22 }
 ];
 
-let oldRoadPlayerSpawn = [
-    { image: 'highwayman', tileRow: 4, tileCol: 2 },
-    { image: 'hellion', tileRow: 2, tileCol: 2 },
-    { image: 'jester', tileRow: 2, tileCol: 4 },
-    { image: 'occultist', tileRow: 4, tileCol: 4 }
+let oldRoadPlayerSpawn: SpawnData[] = [
+    { imageName: 'highwayman', tileRow: 4, tileCol: 2 },
+    { imageName: 'hellion', tileRow: 2, tileCol: 2 },
+    { imageName: 'jester', tileRow: 2, tileCol: 4 },
+    { imageName: 'occultist', tileRow: 4, tileCol: 4 }
 ];
-let wealdPlayerSpawn = [
-    { image: 'highwayman', tileRow: 48, tileCol: 2 },
-    { image: 'hellion', tileRow: 50, tileCol: 2 },
-    { image: 'jester', tileRow: 50, tileCol: 4 },
-    { image: 'occultist', tileRow: 48, tileCol: 4 }
-];
-
-let ruins1PlayerSpawn = [
-    { image: 'highwayman', tileRow: 1, tileCol: 9 },
-    { image: 'hellion', tileRow: 1, tileCol: 10 },
-    { image: 'jester', tileRow: 2, tileCol: 10 },
-    { image: 'occultist', tileRow: 2, tileCol: 10 }
+let wealdPlayerSpawn: SpawnData[] = [
+    { imageName: 'highwayman', tileRow: 48, tileCol: 2 },
+    { imageName: 'hellion', tileRow: 50, tileCol: 2 },
+    { imageName: 'jester', tileRow: 50, tileCol: 4 },
+    { imageName: 'occultist', tileRow: 48, tileCol: 4 }
 ];
 
-let ruins2PlayerSpawn = [
-    { image: 'highwayman', tileRow: 1, tileCol: 61 },
-    { image: 'hellion', tileRow: 2, tileCol: 61 },
-    { image: 'jester', tileRow: 3, tileCol: 61 },
-    { image: 'occultist', tileRow: 4, tileCol: 61 }
+let ruins1PlayerSpawn: SpawnData[] = [
+    { imageName: 'highwayman', tileRow: 1, tileCol: 9 },
+    { imageName: 'hellion', tileRow: 1, tileCol: 10 },
+    { imageName: 'jester', tileRow: 2, tileCol: 10 },
+    { imageName: 'occultist', tileRow: 2, tileCol: 10 }
+];
+
+let ruins2PlayerSpawn: SpawnData[] = [
+    { imageName: 'highwayman', tileRow: 1, tileCol: 61 },
+    { imageName: 'hellion', tileRow: 2, tileCol: 61 },
+    { imageName: 'jester', tileRow: 3, tileCol: 61 },
+    { imageName: 'occultist', tileRow: 4, tileCol: 61 }
 ];
 
 let currentEnemies = ruinsLv3Enemies;
@@ -109,24 +112,45 @@ let playerSpawnData = ruins1PlayerSpawn;
 
 let playerIdx = 0;
 
+let gameState: GameState;
+
 io.on('connection', (socket) => {
-    let firstConnection = useAdmin && userConnections.length == 0;
+    let firstConnection = userConnections.length == 0;
     const ip = socket.conn.remoteAddress.split(":")[3]; // when behind proxy: socket.handshake.headers['x-forwarded-for']
+    let adminConnection = ip == networkIpAddress;
     let user = userConnections.find(x => x.ipAddress == ip);
     if (!user) {
         // actually a new user connecting for the first time
         let spawnData = playerSpawnData[playerIdx]
-        user = { id: crypto.randomUUID(), ipAddress: ip, socketIds: [socket.id], imageName: spawnData.image, currentTileRow: spawnData.tileRow, currentTileCol: spawnData.tileCol, admin: firstConnection, shareVision: true };
+        user = { id: crypto.randomUUID(), ipAddress: ip, socketIds: [socket.id], imageName: spawnData.imageName, currentTileRow: spawnData.tileRow, currentTileCol: spawnData.tileCol, admin: adminConnection, shareVision: !adminConnection };
         playerIdx = (playerIdx + 1) % playerSpawnData.length;
         userConnections.push(user);
 
-        if (firstConnection)
+        if (adminConnection)
         {
             // spawn admin player to admin client
-            socket.emit('initialize-player', { userId: user.id, imageName: user.imageName, userTileRow: user.currentTileRow, userTileCol: user.currentTileCol, pov: false, shareVision: user.shareVision, admin: user.admin});
+            socket.emit('initialize-player', { userId: user.id, imageName: '', 
+                                               userTileRow: user.currentTileRow, 
+                                               userTileCol: user.currentTileCol, 
+                                               pov: false, 
+                                               shareVision: user.shareVision,
+                                               admin: user.admin
+                                            });
+        }
+
+        if (firstConnection)
+        {
             for(var i of currentEnemies)
             {
-                userConnections.push({ id: i.id, ipAddress: ip, socketIds: [socket.id], imageName: i.imageName, currentTileRow: i.currentTileRow, currentTileCol: i.currentTileCol, admin: false, shareVision: false});
+                userConnections.push({ id: i.id, 
+                                       ipAddress: ip, 
+                                       socketIds: [socket.id], 
+                                       imageName: i.imageName, 
+                                       currentTileRow: i.currentTileRow, 
+                                       currentTileCol: i.currentTileCol, 
+                                       shareVision: false,
+                                       admin: false
+                                    });
             }
         }
 
@@ -140,7 +164,14 @@ io.on('connection', (socket) => {
     if (user.socketIds.length == 1 && !user.admin)
     {
         // either an initial connection, or a re-connect after closing all instances/tabs so we want to let everyone know
-        socket.broadcast.emit('initialize-player', { userId: user.id, imageName: user.imageName, userTileRow: user.currentTileRow, userTileCol: user.currentTileCol, pov: false, shareVision: true, admin: false});
+        socket.broadcast.emit('initialize-player', { userId: user.id, 
+                                                     imageName: user.imageName, 
+                                                     userTileRow: user.currentTileRow, 
+                                                     userTileCol: user.currentTileCol, 
+                                                     pov: false, 
+                                                     shareVision: true, 
+                                                     admin: false
+                                                    });
     }
     
     // initialize existing connections to the newly connected client
@@ -150,6 +181,11 @@ io.on('connection', (socket) => {
         if (u.socketIds.length == 0) continue;
         const me = u.id == user.id;
         socket.emit('initialize-player', { userId: u.id, imageName: u.imageName, userTileRow: u.currentTileRow, userTileCol: u.currentTileCol, pov: me, shareVision: u.shareVision, admin: u.admin});
+    }
+
+    if (gameState)
+    {
+        socket.emit('receive-game-state', gameState);
     }
 
     socket.on('disconnect', () => {
@@ -170,6 +206,8 @@ io.on('connection', (socket) => {
         // clickData needs id so admin can control different enemies
         let target: { id: string, currentTileRow: number, currentTileCol: number } = userConnections.find(x => x.id == clickData.id);
 
+        if (clickData.path.length == 0) return;
+        
         target.currentTileRow = clickData.path[0].tileRow;
         target.currentTileCol = clickData.path[0].tileCol;
 
@@ -187,7 +225,15 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('stop-player', target.id);
     });
 
+    socket.on('create-game-state', (initData) => {
+        if (!gameState)
+        {
+            gameState = new GameState(initData.rows, initData.cols)
+        }
+    });
+
     socket.on('admin-paint', (paintData) => {
+        gameState.paintTile(paintData.row, paintData.col, paintData.colorHex);
         socket.broadcast.emit('on-admin-paint', paintData);
     });
 

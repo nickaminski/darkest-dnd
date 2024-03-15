@@ -1,4 +1,4 @@
-export class UserConnection {
+export interface UserConnection {
     id: string;
     socketIds: string[];
     ipAddress: string;
