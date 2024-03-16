@@ -74,7 +74,7 @@ export class Level {
 
         this.mouse.$mouseClick.subscribe(e=> {
             if(this.mouse.mousePath && this.mouse.mousePath.length > 0) {
-                var pov = this.entities.find(x => x instanceof Player && x.pov) as Player;
+                var pov = this.getPov();
                 var thePath = [...this.mouse.mousePath];
                 pov.currentMovePath = thePath;
 
@@ -90,6 +90,10 @@ export class Level {
             e.init(this);
             e.calculateVision(this.tileMap);
         }
+    }
+
+    getPov(): Player{
+        return this.entities.find(x => x instanceof Player && x.pov) as Player;
     }
 
     removeEntityById(id: string) {
@@ -114,7 +118,7 @@ export class Level {
         if (this.recalculateMousePath)
         {
             this.recalculateMousePath = false;
-            var pov = this.entities.find(x => x instanceof Player && x.pov) as Player;
+            var pov = this.getPov();
             if (pov)
             {
                 this.mouse.mousePath = this.findPath(pov.tileRow, pov.tileCol, this.mouse.tileRow, this.mouse.tileCol);

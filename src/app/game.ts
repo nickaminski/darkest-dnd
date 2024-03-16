@@ -165,6 +165,11 @@ export class Game {
                         localTile.explored = serverTile.explored;
                     }
                 }
+                let pov = this.level.getPov();
+                if (pov)
+                {
+                    pov.calculateVision(this.level.tileMap);
+                }
             }
         });
     }
