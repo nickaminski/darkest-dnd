@@ -197,7 +197,7 @@ io.on('connection', (socket) => {
         if (user.socketIds.length == 0)
         {
             // trigger despawn on all clients, but keep info incase of reconnect
-            socket.broadcast.emit('remove-player', user.id);
+            socket.broadcast.emit('disconnect-player', user.id);
             console.log(`User disconnected from origin: ${ip} with id: ${socket.id} - remembering ${userConnections.length} connections`);
         }
     });
@@ -221,7 +221,6 @@ io.on('connection', (socket) => {
         target.currentTileRow = clickData.tileRow;
         target.currentTileCol = clickData.tileCol;
 
-        console.log(`User stopped at r:${clickData.tileRow} c:${clickData.tileCol} from origin: ${ip} with id: ${socket.id}`);
         socket.broadcast.emit('stop-player', target.id);
     });
 
@@ -234,7 +233,7 @@ io.on('connection', (socket) => {
 
     socket.on('admin-paint', (paintData) => {
         gameState.paintTile(paintData.row, paintData.col, paintData.colorHex);
-        socket.broadcast.emit('on-admin-paint', paintData);
+        socket.broadcast.emit('admin-paint', paintData);
     });
 
     socket.on('despawn-player', (id) => {
@@ -243,7 +242,14 @@ io.on('connection', (socket) => {
         {
             userConnections.splice(idx, 1);
         }
-        socket.broadcast.emit('on-despawn-player', id);
+        socket.broadcast.emit('despawn-player', id);
+    });
+
+    socket.on('explored-area', (exploreData) => {
+        if (gameState)
+        {
+            gameState.exploreArea(exploreData.topLeft, exploreData.area);
+        }
     });
 });
 

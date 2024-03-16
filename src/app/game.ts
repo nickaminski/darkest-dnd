@@ -119,13 +119,14 @@ export class Game {
             var player = new Player(message.userId, message.userTileRow, message.userTileCol, this.keyboard, message.imageName, message.pov, message.shareVision, this.socket);
             this.level.addEntity(player);
             if (message.pov) {
-                this.camera.setCameraPosition((-player.pixelx + 64 * 3) * this.drawCtx.scale, (-player.pixely + 64 * 10) * this.drawCtx.scale);
+                this.camera.setCameraPosition((-player.pixelx + window.innerWidth / 2) * this.drawCtx.scale, (-player.pixely + window.innerHeight / 2) * this.drawCtx.scale);
             }
         });
 
-        this.socket.on('remove-player', (playerId: string) => {
+        this.socket.on('disconnect-player', (playerId: string) => {
             this.level.removeEntityById(playerId);
             this.level.needsRedraw = true;
+            this.level.recalculateVision = true;
         });
 
         this.socket.on('move-player', (data) => {
@@ -142,15 +143,15 @@ export class Game {
             player.stopPathMovement();
         });
 
-        this.socket.on('on-admin-paint', (paintData) => {
-            
+        this.socket.on('admin-paint', (paintData) => {
             this.level.paintTile(this.level.getTile(paintData.row, paintData.col), paintData.colorHex);
             this.level.needsRedraw = true;
         });
 
-        this.socket.on('on-despawn-player', (id) => {
+        this.socket.on('despawn-player', (id) => {
             this.level.removeEntityById(id);
             this.level.needsRedraw = true;
+            this.level.recalculateVision = true;
         });
 
         this.socket.on('receive-game-state', (gameState) => {
@@ -158,8 +159,10 @@ export class Game {
             {
                 for(let r = 0; r < this.level.height; r++) {
                     for(let c = 0; c < this.level.width; c++) {
-                        let tile = gameState.tiles[r][c];
-                        this.level.paintTile(this.level.getTile(r, c), tile.paintOverColorHex);
+                        let serverTile = gameState.tiles[r][c];
+                        let localTile = this.level.getTile(r, c);
+                        this.level.paintTile(localTile, serverTile.paintOverColorHex);
+                        localTile.explored = serverTile.explored;
                     }
                 }
             }

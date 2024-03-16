@@ -49,11 +49,11 @@ export class Player implements Entity {
     }
 
     update(delta: number) {
-        this.calculateVision(this.level.tileMap);
         if (this.pov) {
             if (this.keyboard.stopPlayerMovement && this.currentMovePath?.length > 0) {
                 this.stopPathMovement();
-                this.socket.emit('stopped', { id: this.id });
+                let targetTile = this.currentMovePath[0];
+                this.socket.emit('stopped', { id: this.id, tileRow: targetTile.tileRow, tileCol: targetTile.tileCol });
             }
         }
         if (this.currentMovePath?.length > 0) {
@@ -89,6 +89,7 @@ export class Player implements Entity {
             this.tileCol = goalTile.tileCol;
             this.currentMovePath.splice(idx, 1);
             this.level.recalculateMousePath = true;
+            this.level.recalculateVision = true;
         }
 
         var dirY = Math.sign(goaly - this.pixely);
@@ -99,8 +100,12 @@ export class Player implements Entity {
     }
 
     calculateVision(tileMap: Tile[][]) {
-        if (!this.shareVision) return;
+        if (!this.shareVision || !this.level.loaded) return;
         this.floodVision(0, this.tileRow, this.tileCol, tileMap);
+        if (this.pov)
+        {
+            this.sendExploredTiles(tileMap);
+        }
     }
 
     private floodVision(lightStep: number, tileRow: number, tileCol: number, tileMap: Tile[][]) {
@@ -128,6 +133,30 @@ export class Player implements Entity {
         if (this.currentMovePath) {
             while (this.currentMovePath.length > 1)
                 this.currentMovePath.shift();
+        }
+    }
+
+    private sendExploredTiles(tileMap: Tile[][]) {
+        let radius = this.dimLightDistance + this.radiantLightDistance;
+        let area: Boolean[][] = [];
+        let topRow = this.tileRow - radius;
+        let leftCol = this.tileCol - radius;
+
+        if (topRow < 0) topRow = 0;
+        if (leftCol < 0) leftCol = 0;
+
+        for(let r = topRow; r < this.tileRow + radius + 1; r++) {
+            if (r > tileMap.length - 1) continue;
+            area.push([]);
+            for(let c = leftCol; c < this.tileCol + radius + 1; c++) {
+                if (c > tileMap[0].length - 1) continue;
+                area[area.length - 1].push(tileMap[r][c].explored);
+            }
+        }
+
+        if (area.length > 0)
+        {
+            this.socket.emit('explored-area', { topLeft: { row: topRow, col: leftCol }, area: area});
         }
     }
 

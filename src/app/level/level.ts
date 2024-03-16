@@ -17,6 +17,7 @@ export class Level {
     tileMap: Tile[][];
     needsRedraw: boolean = false;
     recalculateMousePath: boolean = false;
+    recalculateVision: boolean = true;
     admin: boolean = false;
 
     DEBUG_USE_BRIGHTNESS = true;
@@ -102,7 +103,11 @@ export class Level {
     update(delta: number) {
         if (!this.loaded) return;
 
-        this.tileMap.forEach(row => row.forEach(col => {col.brightness = 0}));
+        if (this.recalculateVision) {
+            this.tileMap.forEach(row => row.forEach(col => {col.brightness = 0}));
+            this.entities.forEach(e => {if (e instanceof Player) e.calculateVision(this.tileMap); });
+            this.recalculateVision = false;
+        }
 
         this.entities.forEach(e => e.update(delta));
 
