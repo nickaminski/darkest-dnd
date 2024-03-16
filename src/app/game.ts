@@ -7,13 +7,12 @@ import { Player } from './entity/player';
 import levelImage from '../assets/maps/ruins.png';
 
 import { Socket } from 'socket.io-client';
+import { PaintColor } from './graphics/paintColor';
 
 export class Game {
     socket: Socket;
 
     running: boolean = false;
-    #width: number;
-    #height: number;
     drawCtx: DrawContext;
     level: Level;
     keyboard: Keyboard;
@@ -22,20 +21,21 @@ export class Game {
 
     admin: boolean = false;
     adminCurrentColorIdx: number = 0;
-    adminPaintColors = [ { hex: '', name: 'clear' }, 
-                         { hex: '000000', name: 'black'}, 
-                         { hex: 'a300d5', name: 'trap'}, 
-                         { hex: '496bff', name: 'curio' }, 
-                         { hex: 'ff0000', name: 'red' }, 
-                         { hex: 'ffcc00', name: 'yellow' } ];
+    adminPaintColors = [ PaintColor.Clear, 
+                         PaintColor.Black, 
+                         PaintColor.Trap, 
+                         PaintColor.Curio, 
+                         PaintColor.Red, 
+                         PaintColor.Yellow,
+                         PaintColor.Brown,
+                         PaintColor.FakeWall
+                        ];
 
     public set width(newVal: number) {
-        this.#width = newVal;
         this.drawCtx.width = newVal;
     }
 
     public set height(newVal: number) {
-        this.#height = newVal;
         this.drawCtx.height = newVal;
     }
 
@@ -81,8 +81,7 @@ export class Game {
     }
 
     adminCyclePov(): void {
-        let players = this.level.entities.filter(x => x instanceof Player) as Player[];
-        let npcs = players.filter(x => !x.shareVision);
+        let npcs = this.level.entities.filter(x => x instanceof Player && !x.shareVision) as Player[];
         if (npcs.length == 0) return;
 
         let idx = npcs.findIndex(x => x.pov);

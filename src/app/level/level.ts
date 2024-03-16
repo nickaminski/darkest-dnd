@@ -222,7 +222,7 @@ export class Level {
 
                     var tile = this.getTile(current.tileRow + i, current.tileCol + j);
                     if (tile == undefined || tile == null) continue;
-                    if (tile.isSolid || (!tile.explored && !this.admin)) continue;
+                    if (tile.invalidPathTile() || (!tile.explored && !this.admin)) continue;
                     
                     var top = this.getTile(current.tileRow - 1, current.tileCol);
                     var bottom = this.getTile(current.tileRow + 1, current.tileCol);
@@ -230,16 +230,16 @@ export class Level {
                     var right = this.getTile(current.tileRow, current.tileCol + 1);
 
                     if (i == -1 && j == -1) {
-                        if (top.isSolid || left.isSolid) continue;
+                        if (top.invalidPathTile() || left.invalidPathTile()) continue;
                     }
                     if (i == -1 && j == 1) {
-                        if (top.isSolid || right.isSolid) continue;
+                        if (top.invalidPathTile() || right.invalidPathTile()) continue;
                     }
                     if (i == 1 && j == -1) {
-                        if (left.isSolid || bottom.isSolid) continue;
+                        if (left.invalidPathTile() || bottom.invalidPathTile()) continue;
                     }
                     if (i == 1 && j == 1) {
-                        if (bottom.isSolid || right.isSolid) continue;
+                        if (bottom.invalidPathTile() || right.invalidPathTile()) continue;
                     }
     
                     var gCost = current.g + this.getDistance(current.tileRow, current.tileCol, tile.row, tile.col);

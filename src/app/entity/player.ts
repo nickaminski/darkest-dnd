@@ -106,14 +106,14 @@ export class Player implements Entity {
     private floodVision(lightStep: number, tileRow: number, tileCol: number, tileMap: Tile[][]) {
         if (tileRow < 0 || tileCol < 0 || tileRow >= tileMap.length || tileCol >= tileMap[0].length) return;
         if (lightStep == this.dimLightDistance + this.radiantLightDistance) return;
-
-        tileMap[tileRow][tileCol].explored = true;
         
-        if (tileMap[tileRow][tileCol].isSolid) return;
+        tileMap[tileRow][tileCol].explored = true;
         
         if (lightStep < this.radiantLightDistance) tileMap[tileRow][tileCol].brightness = BrightnessLevel.Radiant;
         else if (lightStep < this.radiantLightDistance + this.dimLightDistance && tileMap[tileRow][tileCol].brightness < BrightnessLevel.Dim) tileMap[tileRow][tileCol].brightness = BrightnessLevel.Dim;
-    
+        
+        if (tileMap[tileRow][tileCol].invalidPathTile()) return;
+        
         this.floodVision(lightStep + 1, tileRow - 1, tileCol, tileMap);
         this.floodVision(lightStep + 1, tileRow + 1, tileCol, tileMap);
         this.floodVision(lightStep + 1, tileRow, tileCol - 1, tileMap);

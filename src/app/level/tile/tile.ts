@@ -1,3 +1,4 @@
+import { PaintColor } from "../../graphics/paintColor";
 import { BrightnessLevel } from "./brightness";
 
 export class Tile {
@@ -26,5 +27,12 @@ export class Tile {
         if (tileHex == '000000ff') {
             this.isSolid = true;
         }
+    }
+
+    invalidPathTile(): boolean {
+        return this.isSolid ||
+               this.paintOverColorHex == PaintColor.Black.hex ||
+               this.paintOverColorHex == PaintColor.Brown.hex ||
+               this.paintOverColorHex == PaintColor.FakeWall.hex;
     }
 }
