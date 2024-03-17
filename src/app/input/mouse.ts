@@ -11,6 +11,9 @@ export class Mouse {
     private mouseClickSubject: Subject<MouseEvent>;
     $mouseClick: Observable<MouseEvent>;
 
+    mouseDown: boolean;
+    mouseDragging: boolean;
+
     keyboard: Keyboard;
 
     #x: number = 0;
@@ -23,10 +26,14 @@ export class Mouse {
     zoomRatio: number = 0.9;
     mouseWheelSensitivity = 0.0003;
 
+    lastDragPos: any;
+
     constructor(keyboard: Keyboard) {
         this.keyboard = keyboard;
         this.mouseClickSubject = new Subject<MouseEvent>();
         this.$mouseClick = this.mouseClickSubject.asObservable();
+        this.mouseDown = false;
+        this.mouseDragging = false;
     }
 
     public get x(): number {
@@ -50,7 +57,7 @@ export class Mouse {
             drawCtx.drawPath(this.mousePath);
     }
 
-    public onMouseMove(e: MouseEvent, level: Level, drawContext: DrawContext) {
+    public onMouseMove(e: MouseEvent, level: Level, drawContext: DrawContext, camera: Camera) {
         const oldX = this.tileCol;
         const oldY = this.tileRow;
         this.x = e.clientX;
@@ -60,6 +67,15 @@ export class Mouse {
         level.needsRedraw = true;
         if (oldX != this.tileCol || oldY != this.tileRow) {
             level.recalculateMousePath = true;
+        }
+
+        if (this.mouseDown) {
+            this.mouseDragging = true;
+        }
+
+        if (this.mouseDragging) {
+            camera.setCameraPosition(e.clientX - this.lastDragPos.x + camera.x , e.clientY - this.lastDragPos.y + camera.y);
+            this.lastDragPos = { x: e.clientX, y: e.clientY };
         }
     }
 
@@ -86,7 +102,48 @@ export class Mouse {
         level.needsRedraw = true;
     }
 
-    public onMouseClick(e: MouseEvent) {
-        this.mouseClickSubject.next(e);
+    public onMouseDown(e: MouseEvent) {
+        this.mouseDown = true;
+        this.lastDragPos = { x: e.clientX, y: e.clientY };
+    }
+
+    public onTouchStart(e: TouchEvent) {
+        this.mouseDown = true;
+        this.lastDragPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+
+    public onMouseUp(e: MouseEvent) {
+        if (!this.mouseDragging) {
+            this.mouseClickSubject.next(e);
+        }
+        this.mouseDown = false;
+        this.mouseDragging = false;
+    }
+
+    public onTouchEnd(e: TouchEvent) {
+        this.mouseDown = false;
+        this.mouseDragging = false;
+    }
+
+    public onTouchMove(e: TouchEvent, level: Level, drawContext: DrawContext, camera: Camera) {
+        const oldX = this.tileCol;
+        const oldY = this.tileRow;
+        this.x = e.touches[0].clientX;
+        this.y = e.touches[0].clientY;
+        this.tileCol = ((this.x - drawContext.transformX) / drawContext.scale) >> Tile.TileSizeShift;
+        this.tileRow = ((this.y - drawContext.transformY) / drawContext.scale) >> Tile.TileSizeShift;
+        level.needsRedraw = true;
+        if (oldX != this.tileCol || oldY != this.tileRow) {
+            level.recalculateMousePath = true;
+        }
+
+        if (this.mouseDown) {
+            this.mouseDragging = true;
+        }
+
+        if (this.mouseDragging) {
+            camera.setCameraPosition(e.touches[0].clientX - this.lastDragPos.x + camera.x , e.touches[0].clientY - this.lastDragPos.y + camera.y);
+            this.lastDragPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }
     }
 }

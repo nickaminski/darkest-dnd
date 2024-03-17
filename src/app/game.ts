@@ -53,11 +53,16 @@ export class Game {
         this.level = new Level(levelImage, this.mouse, socket);
         this.socket = socket;
 
-        document.addEventListener('mousemove', (e) => this.mouse.onMouseMove(e, this.level, this.drawCtx));
+        document.addEventListener('mousemove', (e) => this.mouse.onMouseMove(e, this.level, this.drawCtx, this.camera));
         document.addEventListener('wheel', (e) => this.mouse.onMouseWheel(e, this.drawCtx, this.level, this.camera));
         document.addEventListener('keydown', (e) => this.keyboard.onKeyDown(e));
         document.addEventListener('keyup', (e) => this.keyboard.onKeyUp(e));
-        document.addEventListener('click', (e) => this.mouse.onMouseClick(e));
+        document.addEventListener('mousedown', (e) => this.mouse.onMouseDown(e));
+        document.addEventListener('mouseup', (e) => this.mouse.onMouseUp(e));
+
+        document.addEventListener('touchstart', (e) => this.mouse.onTouchStart(e));
+        document.addEventListener('touchend', (e) => this.mouse.onTouchEnd(e));
+        document.addEventListener('touchmove', (e) => this.mouse.onTouchMove(e, this.level, this.drawCtx, this.camera));
 
         this.registerSocketListeningEvents();
     }
