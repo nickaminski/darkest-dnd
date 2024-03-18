@@ -31,6 +31,16 @@ export class Game {
                          PaintColor.FakeWall
                         ];
 
+    adminCurrentNpcSpawnIdx: number = 0;
+    adminSpawnableNpcs = [
+        'slime',
+        'large_slime',
+        'bone_soldier',
+        'collected_rogue',
+        'collected_cleric',
+        'collected_warrior'
+    ];
+
     public set width(newVal: number) {
         this.drawCtx.width = newVal;
     }
@@ -104,6 +114,12 @@ export class Game {
         this.level.needsRedraw = true;
     }
 
+    adminCycleNpcs(): void {
+        this.adminCurrentNpcSpawnIdx++;
+        this.adminCurrentNpcSpawnIdx %= this.adminSpawnableNpcs.length;
+        console.log(`current npc: ${this.adminSpawnableNpcs[this.adminCurrentNpcSpawnIdx]}`);
+    }
+
     registerSocketListeningEvents(): void {
         this.socket.on('connect', () => {
             if (this.level.loaded) {
@@ -112,20 +128,13 @@ export class Game {
         });
 
         this.socket.on('initialize-player', (message: any) => {
-            this.level.needsRedraw = true;
-            if (message.admin) 
-            {
-                this.admin = true;
-                this.level.admin = true;
-                this.level.DEBUG_USE_BRIGHTNESS = false;
-                return;
-            }
-
-            var player = new Player(message.userId, message.userTileRow, message.userTileCol, this.keyboard, message.imageName, message.pov, message.shareVision, this.socket);
-            this.level.addEntity(player);
-            if (message.pov) {
-                this.camera.setCameraPosition((-player.pixelx + window.innerWidth / 2) * this.drawCtx.scale, (-player.pixely + window.innerHeight / 2) * this.drawCtx.scale);
-            }
+            this.spawnPlayer(message.admin, 
+                             message.userId, 
+                             message.userTileRow, 
+                             message.userTileCol, 
+                             message.imageName, 
+                             message.pov, 
+                             message.shareVision);
         });
 
         this.socket.on('disconnect-player', (playerId: string) => {
@@ -181,51 +190,89 @@ export class Game {
 
     handleAminControls(): void {
         if (this.keyboard.toggleLights && !this.level.DEBUG_USE_BRIGHTNESS)
+        {
+            this.level.DEBUG_USE_BRIGHTNESS = true;
+            this.level.needsRedraw = true;
+        }
+        else if (!this.keyboard.toggleLights && this.level.DEBUG_USE_BRIGHTNESS)
+        {
+            this.level.DEBUG_USE_BRIGHTNESS = false;
+            this.level.needsRedraw = true;
+        }
+
+        if (this.keyboard.cyclePov && !this.keyboard.didCycle)
+        {
+            this.keyboard.didCycle = true;
+            this.adminCyclePov();
+        }
+
+        if (this.keyboard.cycleColor && !this.keyboard.didCycle)
+        {
+            this.keyboard.didCycle = true;
+            this.adminCurrentColorIdx = (this.adminCurrentColorIdx + 1) % this.adminPaintColors.length;
+            console.log(`current paint color: ${this.adminPaintColors[this.adminCurrentColorIdx].name}`);
+        }
+
+        if (this.keyboard.placeColor && !this.keyboard.didCycle)
+        {
+            this.keyboard.didCycle = true;
+            let tile = this.level.getTile(this.mouse.tileRow, this.mouse.tileCol);
+            if (tile)
             {
-                this.level.DEBUG_USE_BRIGHTNESS = true;
+                this.level.paintTile(tile, this.adminPaintColors[this.adminCurrentColorIdx].hex);
                 this.level.needsRedraw = true;
+                this.socket.emit('admin-paint', { row: this.mouse.tileRow, col: this.mouse.tileCol, colorHex: this.adminPaintColors[this.adminCurrentColorIdx].hex });
             }
-            else if (!this.keyboard.toggleLights && this.level.DEBUG_USE_BRIGHTNESS)
+        }
+
+        if (this.keyboard.removePlayer && !this.keyboard.didCycle)
+        {
+            this.keyboard.didCycle = true;
+            let pov = this.level.entities.find(x => x instanceof Player && x.pov);
+            if (pov)
             {
-                this.level.DEBUG_USE_BRIGHTNESS = false;
+                this.socket.emit('despawn-player', pov.id);
+                this.level.removeEntityById(pov.id);
                 this.level.needsRedraw = true;
+                this.level.recalculateMousePath = true;
             }
+        }
 
-            if (this.keyboard.cyclePov && !this.keyboard.didCycle)
-            {
-                this.keyboard.didCycle = true;
-                this.adminCyclePov();
-            }
+        if (this.keyboard.cycleNpc && !this.keyboard.didCycle)
+        {
+            this.keyboard.didCycle = true;
+            this.adminCycleNpcs();
+        }
 
-            if (this.keyboard.cycleColor && !this.keyboard.didCycle)
-            {
-                this.keyboard.didCycle = true;
-                this.adminCurrentColorIdx = (this.adminCurrentColorIdx + 1) % this.adminPaintColors.length;
-                console.log(`current paint color: ${this.adminPaintColors[this.adminCurrentColorIdx].name}`);
-            }
-
-            if (this.keyboard.placeColor && !this.keyboard.didCycle)
-            {
-                let tile = this.level.getTile(this.mouse.tileRow, this.mouse.tileCol);
-                if (tile)
-                {
-                    this.level.paintTile(tile, this.adminPaintColors[this.adminCurrentColorIdx].hex);
-                    this.level.needsRedraw = true;
-                    this.socket.emit('admin-paint', { row: this.mouse.tileRow, col: this.mouse.tileCol, colorHex: this.adminPaintColors[this.adminCurrentColorIdx].hex });
-                }
-            }
-
-            if (this.keyboard.removePlayer && !this.keyboard.didCycle)
-            {
-                let pov = this.level.entities.find(x => x instanceof Player && x.pov);
-                if (pov)
-                {
-                    this.socket.emit('despawn-player', pov.id);
-                    this.level.removeEntityById(pov.id);
-                    this.level.needsRedraw = true;
-                    this.level.recalculateMousePath = true;
-                }
-            }
+        if (this.keyboard.placeNpc && !this.keyboard.didCycle)
+        {
+            this.keyboard.didCycle = true;
+            let spawnData = { userId: uuid(), tileRow: this.mouse.tileRow, tileCol: this.mouse.tileCol, imageName: this.adminSpawnableNpcs[this.adminCurrentNpcSpawnIdx]};
+            this.spawnPlayer(false, spawnData.userId, spawnData.tileRow, spawnData.tileCol, spawnData.imageName, false, false);
+            this.socket.emit('admin-spawn', spawnData);
+        }
     }
 
+    spawnPlayer(admin: boolean, userId: string, tileRow: number, tileCol: number, imageName: string, pov: boolean, shareVision: boolean) {
+        this.level.needsRedraw = true;
+        if (admin) 
+        {
+            this.admin = true;
+            this.level.admin = true;
+            this.level.DEBUG_USE_BRIGHTNESS = false;
+            return;
+        }
+
+        var player = new Player(userId, tileRow, tileCol, this.keyboard, imageName, pov, shareVision, this.socket);
+        this.level.addEntity(player);
+        if (pov) {
+            this.camera.setCameraPosition((-player.pixelx + window.innerWidth / 2) * this.drawCtx.scale, (-player.pixely + window.innerHeight / 2) * this.drawCtx.scale);
+        }
+    }
+}
+
+function uuid() {
+    return ('10000000-1000-4000-8000-100000000000').replace(/[018]/g, c => (
+        parseInt(c) ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (parseInt(c) / 4)))).toString(16)
+    );
 }

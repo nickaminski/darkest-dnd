@@ -35,8 +35,6 @@ let wealdLv2Enemies = [
     { id: crypto.randomUUID(), imageName: 'fungal_artillery', currentTileRow: 73, currentTileCol: 42 },
     { id: crypto.randomUUID(), imageName: 'fungal_artillery', currentTileRow: 73, currentTileCol: 42 },
     { id: crypto.randomUUID(), imageName: 'large_slime', currentTileRow: 42, currentTileCol: 144 },
-    { id: crypto.randomUUID(), imageName: 'large_slime', currentTileRow: 42, currentTileCol: 144 },
-    { id: crypto.randomUUID(), imageName: 'slime', currentTileRow: 39, currentTileCol: 138 },
     { id: crypto.randomUUID(), imageName: 'slime', currentTileRow: 39, currentTileCol: 138 },
     { id: crypto.randomUUID(), imageName: 'abomination', currentTileRow: 47, currentTileCol: 74 }
 ];
@@ -70,9 +68,6 @@ let ruinsLv4Enemies = [
     { id: crypto.randomUUID(), imageName: 'gargoyle', currentTileRow: 24, currentTileCol: 57 },
     { id: crypto.randomUUID(), imageName: 'gargoyle', currentTileRow: 19, currentTileCol: 54 },
     { id: crypto.randomUUID(), imageName: 'collector', currentTileRow: 11, currentTileCol: 14 },
-    { id: crypto.randomUUID(), imageName: 'collected_rogue', currentTileRow: 2, currentTileCol: 32 },
-    { id: crypto.randomUUID(), imageName: 'collected_cleric', currentTileRow: 2, currentTileCol: 32 },
-    { id: crypto.randomUUID(), imageName: 'collected_warrior', currentTileRow: 2, currentTileCol: 32 },
     { id: crypto.randomUUID(), imageName: 'prophet', currentTileRow: 41, currentTileCol: 28 },
     { id: crypto.randomUUID(), imageName: 'madman', currentTileRow: 37, currentTileCol: 33 },
     { id: crypto.randomUUID(), imageName: 'madman', currentTileRow: 40, currentTileCol: 30 },
@@ -234,6 +229,28 @@ io.on('connection', (socket) => {
     socket.on('admin-paint', (paintData) => {
         gameState.paintTile(paintData.row, paintData.col, paintData.colorHex);
         socket.broadcast.emit('admin-paint', paintData);
+    });
+
+    socket.on('admin-spawn', (spawnData) => {
+        let spawn = { 
+            id: spawnData.userId, 
+            ipAddress: ip, 
+            socketIds: [socket.id], 
+            imageName: spawnData.imageName, 
+            currentTileRow: spawnData.tileRow, 
+            currentTileCol: spawnData.tileCol, 
+            admin: false, 
+            shareVision: false 
+        };
+        userConnections.push(spawn);
+        socket.broadcast.emit('initialize-player', { userId: spawn.id, 
+                                                     imageName: spawn.imageName, 
+                                                     userTileRow: spawn.currentTileRow, 
+                                                     userTileCol: spawn.currentTileCol, 
+                                                     pov: false, 
+                                                     shareVision: false, 
+                                                     admin: false
+                                                });
     });
 
     socket.on('despawn-player', (id) => {

@@ -48,6 +48,14 @@ export class Keyboard {
         return this.keys.get('Escape');
     }
 
+    public get cycleNpc() {
+        return this.keys.get('KeyT');
+    }
+
+    public get placeNpc() {
+        return this.keys.get('KeyY');
+    }
+
     onKeyDown(e: KeyboardEvent) {
         this.keys.set(e.code, true);
     }
