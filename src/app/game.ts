@@ -257,6 +257,7 @@ export class Game {
         this.level.needsRedraw = true;
         if (admin) 
         {
+            console.log('we are admin status');
             this.admin = true;
             this.level.admin = true;
             this.level.DEBUG_USE_BRIGHTNESS = false;

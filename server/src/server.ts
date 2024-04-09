@@ -3,7 +3,6 @@ import * as http from 'http';
 import { Server } from "socket.io";
 import { UserConnection } from './models/userConnection';
 import { SpawnData } from './models/spawnData';
-import { first } from 'rxjs';
 import { GameState } from './models/gameState';
 
 const server = http.createServer();
@@ -109,8 +108,20 @@ let playerIdx = 0;
 
 let gameState: GameState;
 
+for(var i of currentEnemies)
+{
+    userConnections.push({ id: i.id, 
+                           ipAddress: 'local', 
+                           socketIds: ['-1'], 
+                           imageName: i.imageName, 
+                           currentTileRow: i.currentTileRow, 
+                           currentTileCol: i.currentTileCol, 
+                           shareVision: false,
+                           admin: false
+                        });
+}
+
 io.on('connection', (socket) => {
-    let firstConnection = userConnections.length == 0;
     const ip = socket.conn.remoteAddress.split(":")[3]; // when behind proxy: socket.handshake.headers['x-forwarded-for']
     let adminConnection = ip == networkIpAddress;
     let user = userConnections.find(x => x.ipAddress == ip);
@@ -120,38 +131,9 @@ io.on('connection', (socket) => {
         user = { id: crypto.randomUUID(), ipAddress: ip, socketIds: [socket.id], imageName: spawnData.imageName, currentTileRow: spawnData.tileRow, currentTileCol: spawnData.tileCol, admin: adminConnection, shareVision: !adminConnection };
         playerIdx = (playerIdx + 1) % playerSpawnData.length;
         userConnections.push(user);
-
-        if (adminConnection)
-        {
-            // spawn admin player to admin client
-            socket.emit('initialize-player', { userId: user.id, imageName: '', 
-                                               userTileRow: user.currentTileRow, 
-                                               userTileCol: user.currentTileCol, 
-                                               pov: false, 
-                                               shareVision: user.shareVision,
-                                               admin: user.admin
-                                            });
-        }
-
-        if (firstConnection)
-        {
-            for(var i of currentEnemies)
-            {
-                userConnections.push({ id: i.id, 
-                                       ipAddress: ip, 
-                                       socketIds: [socket.id], 
-                                       imageName: i.imageName, 
-                                       currentTileRow: i.currentTileRow, 
-                                       currentTileCol: i.currentTileCol, 
-                                       shareVision: false,
-                                       admin: false
-                                    });
-            }
-        }
-
         console.log(`A user connected from origin: ${ip} with id: ${socket.id}`);
     } else {
-        // open another tab after connecting
+        // open another tab after connecting, or re-connect after closing out
         user.socketIds.push(socket.id);
         console.log(`Duplicate connection from user with origin: ${user.ipAddress} with id: ${socket.id}`);
     }
@@ -222,7 +204,7 @@ io.on('connection', (socket) => {
     socket.on('create-game-state', (initData) => {
         if (!gameState)
         {
-            gameState = new GameState(initData.rows, initData.cols)
+            gameState = new GameState(initData.rows, initData.cols);
         }
     });
 
