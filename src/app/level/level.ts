@@ -174,7 +174,6 @@ export class Level {
         return this.pixelHexValues[x + y * this.width];
     }
 
-
     paintTile(tile: Tile, colorHex: string) {
         if (tile)
         {

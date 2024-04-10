@@ -80,13 +80,13 @@ export class DrawContext {
             this.ctx.strokeRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
             this.ctx.fillRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
 
-            if (paintOverColorHex)
+            if (paintOverColorHex && brightness)
             {
                 this.ctx.fillStyle = `#${paintOverColorHex}`;
                 this.ctx.fillRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
             }
 
-            if (tileHex != '000000ff')
+            if (tileHex != '000000ff' && !paintOverColorHex)
             {
                 if (brightness == BrightnessLevel.Explored) {
                     this.ctx.fillStyle = '#000000aa';

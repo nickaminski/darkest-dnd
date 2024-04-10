@@ -199,6 +199,7 @@ export class Game {
 
         this.socket.on('admin-paint', (paintData) => {
             this.level.paintTile(this.level.getTile(paintData.row, paintData.col), paintData.colorHex);
+            this.level.recalculateVision = true;
             this.level.needsRedraw = true;
         });
 
