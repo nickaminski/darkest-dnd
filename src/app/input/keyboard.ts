@@ -41,7 +41,7 @@ export class Keyboard {
     }
 
     public get placeColor() {
-        return this.keys.get('KeyR');
+        return this.keys.get('KeyC');
     }
 
     public get removePlayer() {
@@ -49,11 +49,11 @@ export class Keyboard {
     }
 
     public get cycleNpc() {
-        return this.keys.get('KeyT');
+        return this.keys.get('KeyR');
     }
 
     public get placeNpc() {
-        return this.keys.get('KeyY');
+        return this.keys.get('KeyV');
     }
 
     onKeyDown(e: KeyboardEvent) {

@@ -8,6 +8,7 @@ import levelImage from '../assets/maps/ruins.png';
 
 import { Socket } from 'socket.io-client';
 import { PaintColor } from './graphics/paintColor';
+import { ImageBank } from './graphics/imageBank';
 
 export class Game {
     socket: Socket;
@@ -117,7 +118,19 @@ export class Game {
     adminCycleNpcs(): void {
         this.adminCurrentNpcSpawnIdx++;
         this.adminCurrentNpcSpawnIdx %= this.adminSpawnableNpcs.length;
-        console.log(`current npc: ${this.adminSpawnableNpcs[this.adminCurrentNpcSpawnIdx]}`);
+
+        for (let i = 0; i < this.adminSpawnableNpcs.length; i++) {
+            let b = document.getElementById(`btn_adminNpc_${this.adminSpawnableNpcs[i]}`);
+            b.style.borderColor = this.adminCurrentNpcSpawnIdx == i ? 'green' : 'black';
+        }
+    }
+
+    adminCycleColor(): void {
+        this.adminCurrentColorIdx = (this.adminCurrentColorIdx + 1) % this.adminPaintColors.length;
+        for (let c = 0; c < this.adminPaintColors.length; c++) {
+            let b = document.getElementById(`btn_adminColor_${this.adminPaintColors[c].name}`);
+            b.style.borderColor = this.adminCurrentColorIdx == c ? 'green' : 'black';
+        }
     }
 
     registerSocketListeningEvents(): void {
@@ -209,8 +222,7 @@ export class Game {
         if (this.keyboard.cycleColor && !this.keyboard.didCycle)
         {
             this.keyboard.didCycle = true;
-            this.adminCurrentColorIdx = (this.adminCurrentColorIdx + 1) % this.adminPaintColors.length;
-            console.log(`current paint color: ${this.adminPaintColors[this.adminCurrentColorIdx].name}`);
+            this.adminCycleColor();
         }
 
         if (this.keyboard.placeColor && !this.keyboard.didCycle)
@@ -257,10 +269,11 @@ export class Game {
         this.level.needsRedraw = true;
         if (admin) 
         {
-            console.log('we are admin status');
             this.admin = true;
             this.level.admin = true;
             this.level.DEBUG_USE_BRIGHTNESS = false;
+
+            this.createAdminControls();
             return;
         }
 
@@ -269,6 +282,88 @@ export class Game {
         if (pov) {
             this.camera.setCameraPosition((-player.pixelx + window.innerWidth / 2) * this.drawCtx.scale, (-player.pixely + window.innerHeight / 2) * this.drawCtx.scale);
         }
+    }
+
+    createAdminControls(): void {
+        let adminContainer = document.getElementById('admin-controls');
+        adminContainer.appendChild(this.createAdminNpcPanel());
+        adminContainer.appendChild(this.createAdminColorPanel());
+    }
+
+    createAdminNpcPanel(): HTMLDivElement {
+        let npcContainer = document.createElement('div');
+        npcContainer.id = 'admin-npcs';
+        npcContainer.style.position = 'fixed';
+        npcContainer.style.display = 'flex';
+        npcContainer.style.bottom = '64px';
+        npcContainer.style.left = '16px';
+        npcContainer.style.padding = '3px';
+        npcContainer.style.backgroundColor = 'lightgrey';
+        
+        for (let c = 0; c < this.adminSpawnableNpcs.length; c++) {
+            let npc = this.adminSpawnableNpcs[c];
+            let button = document.createElement('img');
+            button.id = `btn_adminNpc_${npc}`;
+            button.role = 'button';
+            button.src = ImageBank.getImageUrl(npc);
+            button.title = npc;
+            button.style.border = 'solid 3px';
+            button.style.width = '48px';
+            button.style.height = '48px'; 
+            button.style.margin = '2px';
+            button.style.borderRadius = '50%';
+            button.style.cursor = 'pointer';
+            button.style.borderColor = c == 0 ?  'green' : 'black';
+
+            button.addEventListener('click', e => { 
+                for (let i = 0; i < this.adminSpawnableNpcs.length; i++) {
+                    let b = document.getElementById(`btn_adminNpc_${this.adminSpawnableNpcs[i]}`);
+                    b.style.borderColor = 'black';
+                }
+                button.style.borderColor = 'green';
+                this.adminCurrentNpcSpawnIdx = c;
+            });
+            npcContainer.appendChild(button);
+        }
+
+        return npcContainer;
+    }
+
+    createAdminColorPanel(): HTMLDivElement {
+        let colorContainer = document.createElement('div');
+        colorContainer.id = 'admin-colors';
+        colorContainer.style.position = 'fixed';
+        colorContainer.style.display = 'flex';
+        colorContainer.style.bottom = '16px';
+        colorContainer.style.left = '16px';
+        colorContainer.style.padding = '3px';
+        colorContainer.style.backgroundColor = 'lightgrey';
+
+        for (let c = 0; c < this.adminPaintColors.length; c++) {
+            let color = this.adminPaintColors[c];
+            let button = document.createElement('div');
+            button.id = `btn_adminColor_${color.name}`;
+            button.role = 'button';
+            button.style.backgroundColor = `#${color.hex}`;
+            button.style.border = 'solid 3px';
+            button.style.width = '32px';
+            button.style.height = '32px';
+            button.style.userSelect = 'none';
+            button.style.margin = '2px';
+            button.style.cursor = 'pointer';
+            button.style.borderColor = c == 0 ?  'green' : 'black';
+
+            button.addEventListener('click', e => { 
+                for (let i = 0; i < this.adminPaintColors.length; i++) {
+                    let b = document.getElementById(`btn_adminColor_${this.adminPaintColors[i].name}`);
+                    b.style.borderColor = 'black';
+                }
+                button.style.borderColor = 'green';
+                this.adminCurrentColorIdx = c; 
+            });
+            colorContainer.appendChild(button);
+        }
+        return colorContainer;
     }
 }
 
