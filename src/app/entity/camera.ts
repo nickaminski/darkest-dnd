@@ -26,23 +26,25 @@ export class Camera {
     }
 
     update(delta: number, level: Level) {
+        let dx = 0;
+        let dy = 0;
+
         if (this.input.moveUp) {
-            this.#y += this.speed * delta * this.screen.scale;
-            this.screen.updateTransform(this.#x, this.#y);
-            level.needsRedraw = true;
+            dy += this.speed * delta * this.screen.scale;
         }
         if (this.input.moveDown) {
-            this.#y -= this.speed * delta * this.screen.scale;
-            this.screen.updateTransform(this.#x, this.#y);
-            level.needsRedraw = true;
+            dy -= this.speed * delta * this.screen.scale;
         }
         if (this.input.moveLeft) {
-            this.#x += this.speed * delta * this.screen.scale;
-            this.screen.updateTransform(this.#x, this.#y);
-            level.needsRedraw = true;
+            dx += this.speed * delta * this.screen.scale;
         }
         if (this.input.moveRight) {
-            this.#x -= this.speed * delta * this.screen.scale;
+            dx -= this.speed * delta * this.screen.scale;
+        }
+
+        if (dx != 0 || dy != 0) {
+            this.#x += dx;
+            this.#y += dy;
             this.screen.updateTransform(this.#x, this.#y);
             level.needsRedraw = true;
         }

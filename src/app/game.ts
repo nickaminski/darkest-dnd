@@ -133,6 +133,33 @@ export class Game {
         }
     }
 
+    adminPlaceColor(): void {
+        let tile = this.level.getTile(this.mouse.tileRow, this.mouse.tileCol);
+        if (tile)
+        {
+            this.level.paintTile(tile, this.adminPaintColors[this.adminCurrentColorIdx].hex);
+            this.level.needsRedraw = true;
+            this.socket.emit('admin-paint', { row: this.mouse.tileRow, col: this.mouse.tileCol, colorHex: this.adminPaintColors[this.adminCurrentColorIdx].hex });
+        }
+    }
+
+    adminRemovePlayer(): void {
+        let pov = this.level.entities.find(x => x instanceof Player && x.pov);
+        if (pov)
+        {
+            this.socket.emit('despawn-player', pov.id);
+            this.level.removeEntityById(pov.id);
+            this.level.needsRedraw = true;
+            this.level.recalculateMousePath = true;
+        }
+    }
+
+    adminPlaceNpc(): void {
+        let spawnData = { userId: uuid(), tileRow: this.mouse.tileRow, tileCol: this.mouse.tileCol, imageName: this.adminSpawnableNpcs[this.adminCurrentNpcSpawnIdx]};
+        this.spawnPlayer(false, spawnData.userId, spawnData.tileRow, spawnData.tileCol, spawnData.imageName, false, false);
+        this.socket.emit('admin-spawn', spawnData);
+    }
+
     registerSocketListeningEvents(): void {
         this.socket.on('connect', () => {
             if (this.level.loaded) {
@@ -228,26 +255,13 @@ export class Game {
         if (this.keyboard.placeColor && !this.keyboard.didCycle)
         {
             this.keyboard.didCycle = true;
-            let tile = this.level.getTile(this.mouse.tileRow, this.mouse.tileCol);
-            if (tile)
-            {
-                this.level.paintTile(tile, this.adminPaintColors[this.adminCurrentColorIdx].hex);
-                this.level.needsRedraw = true;
-                this.socket.emit('admin-paint', { row: this.mouse.tileRow, col: this.mouse.tileCol, colorHex: this.adminPaintColors[this.adminCurrentColorIdx].hex });
-            }
+            this.adminPlaceColor();
         }
 
         if (this.keyboard.removePlayer && !this.keyboard.didCycle)
         {
             this.keyboard.didCycle = true;
-            let pov = this.level.entities.find(x => x instanceof Player && x.pov);
-            if (pov)
-            {
-                this.socket.emit('despawn-player', pov.id);
-                this.level.removeEntityById(pov.id);
-                this.level.needsRedraw = true;
-                this.level.recalculateMousePath = true;
-            }
+            this.adminRemovePlayer();
         }
 
         if (this.keyboard.cycleNpc && !this.keyboard.didCycle)
@@ -259,9 +273,7 @@ export class Game {
         if (this.keyboard.placeNpc && !this.keyboard.didCycle)
         {
             this.keyboard.didCycle = true;
-            let spawnData = { userId: uuid(), tileRow: this.mouse.tileRow, tileCol: this.mouse.tileCol, imageName: this.adminSpawnableNpcs[this.adminCurrentNpcSpawnIdx]};
-            this.spawnPlayer(false, spawnData.userId, spawnData.tileRow, spawnData.tileCol, spawnData.imageName, false, false);
-            this.socket.emit('admin-spawn', spawnData);
+            this.adminPlaceNpc();
         }
     }
 
@@ -313,6 +325,7 @@ export class Game {
             button.style.margin = '2px';
             button.style.borderRadius = '50%';
             button.style.cursor = 'pointer';
+            button.style.userSelect = 'none';
             button.style.borderColor = c == 0 ?  'green' : 'black';
 
             button.addEventListener('click', e => { 
