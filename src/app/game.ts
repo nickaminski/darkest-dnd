@@ -118,6 +118,7 @@ export class Game {
     adminCycleNpcs(): void {
         this.adminCurrentNpcSpawnIdx++;
         this.adminCurrentNpcSpawnIdx %= this.adminSpawnableNpcs.length;
+        (document.getElementById('admin-npc-toggle') as HTMLImageElement).src = ImageBank.getImageUrl(this.adminSpawnableNpcs[this.adminCurrentNpcSpawnIdx]);
 
         for (let i = 0; i < this.adminSpawnableNpcs.length; i++) {
             let b = document.getElementById(`btn_adminNpc_${this.adminSpawnableNpcs[i]}`);
@@ -127,6 +128,7 @@ export class Game {
 
     adminCycleColor(): void {
         this.adminCurrentColorIdx = (this.adminCurrentColorIdx + 1) % this.adminPaintColors.length;
+        document.getElementById('admin-color-toggle').style.backgroundColor = `#${this.adminPaintColors[this.adminCurrentColorIdx].hex}`;
         for (let c = 0; c < this.adminPaintColors.length; c++) {
             let b = document.getElementById(`btn_adminColor_${this.adminPaintColors[c].name}`);
             b.style.borderColor = this.adminCurrentColorIdx == c ? 'green' : 'black';
@@ -300,7 +302,63 @@ export class Game {
     createAdminControls(): void {
         let adminContainer = document.getElementById('admin-controls');
         adminContainer.appendChild(this.createAdminNpcPanel());
+        adminContainer.appendChild(this.createAdminNpcButton());
         adminContainer.appendChild(this.createAdminColorPanel());
+        adminContainer.appendChild(this.createAdminColorButton());
+    }
+
+    createAdminNpcButton(): HTMLImageElement {
+        let npcButton = document.createElement('img');
+        npcButton.id = 'admin-npc-toggle';
+        npcButton.role = 'button';
+        npcButton.src = ImageBank.getImageUrl(this.adminSpawnableNpcs[this.adminCurrentColorIdx]);
+        npcButton.style.position = 'fixed';
+        npcButton.style.width = '52px';
+        npcButton.style.height = '52px';
+        npcButton.style.bottom = '16px';
+        npcButton.style.left = '16px';
+        npcButton.style.backgroundColor = 'lightgrey';
+        npcButton.style.cursor = 'pointer';
+        npcButton.style.userSelect = 'none';
+        npcButton.addEventListener('click', e => {
+            let npcContainer = document.getElementById('admin-npcs');
+            if (npcContainer.style.height == '0px') {
+                npcContainer.style.height = '312px';
+            } else {
+                npcContainer.style.height = '0px';
+            }
+        });
+        return npcButton;
+    }
+
+    createAdminColorButton(): HTMLDivElement {
+        let background = document.createElement('div');
+        background.style.backgroundColor = 'lightgrey';
+        background.style.position = 'fixed';
+        background.style.bottom = '16px';
+        background.style.left = '80px';
+        background.style.width = '36px';
+        background.style.height = '36px';
+
+        let colorButton = document.createElement('img');
+        colorButton.id = 'admin-color-toggle';
+        colorButton.role = 'button';
+        colorButton.src = ImageBank.getImageUrl('palette');
+        colorButton.style.width = '36px';
+        colorButton.style.height = '36px';
+        colorButton.style.backgroundColor = 'lightgrey';
+        colorButton.style.cursor = 'pointer';
+        colorButton.style.userSelect = 'none';
+        colorButton.addEventListener('click', e => {
+            let colorContainer = document.getElementById('admin-colors');
+            if (colorContainer.style.height == '0px') {
+                colorContainer.style.height = '288px';
+            } else {
+                colorContainer.style.height = '0px';
+            }
+        });
+        background.appendChild(colorButton);
+        return background;
     }
 
     createAdminNpcPanel(): HTMLDivElement {
@@ -308,10 +366,13 @@ export class Game {
         npcContainer.id = 'admin-npcs';
         npcContainer.style.position = 'fixed';
         npcContainer.style.display = 'flex';
-        npcContainer.style.bottom = '64px';
+        npcContainer.style.flexFlow = 'column';
+        npcContainer.style.bottom = '74px';
         npcContainer.style.left = '16px';
-        npcContainer.style.padding = '3px';
         npcContainer.style.backgroundColor = 'lightgrey';
+        npcContainer.style.overflow = 'hidden';
+        npcContainer.style.height = '0px';
+        npcContainer.style.transition = '.2s';
         
         for (let c = 0; c < this.adminSpawnableNpcs.length; c++) {
             let npc = this.adminSpawnableNpcs[c];
@@ -331,11 +392,11 @@ export class Game {
 
             button.addEventListener('click', e => { 
                 for (let i = 0; i < this.adminSpawnableNpcs.length; i++) {
-                    let b = document.getElementById(`btn_adminNpc_${this.adminSpawnableNpcs[i]}`);
-                    b.style.borderColor = 'black';
+                    document.getElementById(`btn_adminNpc_${this.adminSpawnableNpcs[i]}`).style.borderColor = 'black';
                 }
                 button.style.borderColor = 'green';
                 this.adminCurrentNpcSpawnIdx = c;
+                (document.getElementById('admin-npc-toggle') as HTMLImageElement).src = ImageBank.getImageUrl(npc);
             });
             npcContainer.appendChild(button);
         }
@@ -348,10 +409,13 @@ export class Game {
         colorContainer.id = 'admin-colors';
         colorContainer.style.position = 'fixed';
         colorContainer.style.display = 'flex';
-        colorContainer.style.bottom = '16px';
-        colorContainer.style.left = '16px';
-        colorContainer.style.padding = '3px';
+        colorContainer.style.bottom = '58px';
+        colorContainer.style.flexFlow = 'column';
+        colorContainer.style.left = '80px';
         colorContainer.style.backgroundColor = 'lightgrey';
+        colorContainer.style.overflow = 'hidden';
+        colorContainer.style.height = '0px';
+        colorContainer.style.transition = '.2s';
 
         for (let c = 0; c < this.adminPaintColors.length; c++) {
             let color = this.adminPaintColors[c];
@@ -369,11 +433,11 @@ export class Game {
 
             button.addEventListener('click', e => { 
                 for (let i = 0; i < this.adminPaintColors.length; i++) {
-                    let b = document.getElementById(`btn_adminColor_${this.adminPaintColors[i].name}`);
-                    b.style.borderColor = 'black';
+                    document.getElementById(`btn_adminColor_${this.adminPaintColors[i].name}`).style.borderColor = 'black';
                 }
                 button.style.borderColor = 'green';
-                this.adminCurrentColorIdx = c; 
+                this.adminCurrentColorIdx = c;
+                document.getElementById('admin-color-toggle').style.backgroundColor = `#${this.adminPaintColors[this.adminCurrentColorIdx].hex}`;
             });
             colorContainer.appendChild(button);
         }

@@ -33,6 +33,8 @@ import collector from '../../assets/tokens/Collector.png';
 import prophet from '../../assets/tokens/Prophet.png';
 import manAtArms from '../../assets/tokens/Man-at-Arms.png';
 
+import palette from '../../assets/icons/palette.svg';
+
 export class ImageBank {
     static getImageUrl(imageName: string): string {
         switch(imageName)
@@ -71,6 +73,7 @@ export class ImageBank {
             case 'collected_warrior': return collectedWarrior;
             case 'collector': return collector;
             case 'prophet': return prophet;
+            case 'palette': return palette;
             default: return ancestor;
         }
     }
