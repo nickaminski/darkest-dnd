@@ -2,7 +2,7 @@ export class PaintColor {
     hex: string;
     name: string;
 
-    public static Clear: PaintColor = { hex: '00000000', name: 'clear' };
+    public static Clear: PaintColor = { hex: null, name: 'clear' };
     public static Black: PaintColor = { hex: '000000ff', name: 'black' };
     public static Trap: PaintColor = { hex: 'a300d5ff', name: 'trap' };
     public static Curio: PaintColor = { hex: '496bffff', name: 'curio' };

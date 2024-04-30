@@ -137,11 +137,11 @@ export class Level {
         // get into tile coordinates for tile drawing
         const x0 = (-drawContext.transformX / drawContext.scale) >> Tile.TileSizeShift;
         const y0 = (-drawContext.transformY / drawContext.scale) >> Tile.TileSizeShift;
-        const x1 = ((-drawContext.transformX + drawContext.width + Tile.TileSize * 2) / drawContext.scale) >> Tile.TileSizeShift;
-        const y1 = ((-drawContext.transformY + drawContext.height + Tile.TileSize * 2) / drawContext.scale) >> Tile.TileSizeShift;
+        const x1 = ((-drawContext.transformX + drawContext.width) / drawContext.scale) >> Tile.TileSizeShift;
+        const y1 = ((-drawContext.transformY + drawContext.height) / drawContext.scale) >> Tile.TileSizeShift;
 
-        for (var y = y0; y < y1; y++) {
-            for (var x = x0; x < x1; x++) {
+        for (var y = y0; y < y1 + 1; y++) {
+            for (var x = x0; x < x1 + 1; x++) {
                 let tile = this.getTile(y, x);
                 drawContext.drawTile(y, x, Tile.TileSize, Tile.TileSize, this.getTileHex(y, x), tile?.paintOverColorHex, this.getBrightness(y, x));
             }

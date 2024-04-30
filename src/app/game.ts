@@ -128,7 +128,8 @@ export class Game {
 
     adminCycleColor(): void {
         this.adminCurrentColorIdx = (this.adminCurrentColorIdx + 1) % this.adminPaintColors.length;
-        document.getElementById('admin-color-toggle').style.backgroundColor = `#${this.adminPaintColors[this.adminCurrentColorIdx].hex}`;
+        let hex = this.adminPaintColors[this.adminCurrentColorIdx].hex ?? '00000000';
+        document.getElementById('admin-color-toggle').style.backgroundColor = `#${hex}`;
         for (let c = 0; c < this.adminPaintColors.length; c++) {
             let b = document.getElementById(`btn_adminColor_${this.adminPaintColors[c].name}`);
             b.style.borderColor = this.adminCurrentColorIdx == c ? 'green' : 'black';
@@ -437,7 +438,9 @@ export class Game {
                 }
                 button.style.borderColor = 'green';
                 this.adminCurrentColorIdx = c;
-                document.getElementById('admin-color-toggle').style.backgroundColor = `#${this.adminPaintColors[this.adminCurrentColorIdx].hex}`;
+                let hex = this.adminPaintColors[this.adminCurrentColorIdx].hex ?? '00000000';
+                console.log(hex);
+                document.getElementById('admin-color-toggle').style.backgroundColor = `#${hex}`;
             });
             colorContainer.appendChild(button);
         }
