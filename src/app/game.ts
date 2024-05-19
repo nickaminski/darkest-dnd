@@ -4,7 +4,7 @@ import { Level } from './level/level';
 import { Keyboard } from './input/keyboard';
 import { Camera } from './entity/camera';
 import { Player } from './entity/player';
-import levelImage from '../assets/maps/ruins.png';
+import levelImage from '../assets/maps/weald.png';
 
 import { Socket } from 'socket.io-client';
 import { PaintColor } from './graphics/paintColor';

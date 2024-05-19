@@ -32,6 +32,7 @@ import collectedWarrior from '../../assets/tokens/Collected_Warrior.png';
 import collector from '../../assets/tokens/Collector.png';
 import prophet from '../../assets/tokens/Prophet.png';
 import manAtArms from '../../assets/tokens/Man-at-Arms.png';
+import crone from '../../assets/tokens/Crone.png';
 
 import palette from '../../assets/icons/palette.svg';
 
@@ -74,6 +75,7 @@ export class ImageBank {
             case 'collector': return collector;
             case 'prophet': return prophet;
             case 'palette': return palette;
+            case 'crone': return crone;
             default: return ancestor;
         }
     }

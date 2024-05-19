@@ -34,7 +34,7 @@ let wealdLv2Enemies = [
     { id: crypto.randomUUID(), imageName: 'fungal_artillery', currentTileRow: 73, currentTileCol: 42 },
     { id: crypto.randomUUID(), imageName: 'fungal_artillery', currentTileRow: 73, currentTileCol: 42 },
     { id: crypto.randomUUID(), imageName: 'large_slime', currentTileRow: 42, currentTileCol: 144 },
-    { id: crypto.randomUUID(), imageName: 'slime', currentTileRow: 39, currentTileCol: 138 },
+    { id: crypto.randomUUID(), imageName: 'crone', currentTileRow: 39, currentTileCol: 138 },
     { id: crypto.randomUUID(), imageName: 'abomination', currentTileRow: 47, currentTileCol: 74 }
 ];
 
@@ -101,8 +101,8 @@ let ruins2PlayerSpawn: SpawnData[] = [
     { imageName: 'occultist', tileRow: 4, tileCol: 61 }
 ];
 
-let currentEnemies = ruinsLv3Enemies;
-let playerSpawnData = ruins1PlayerSpawn;
+let currentEnemies = wealdLv2Enemies;
+let playerSpawnData = wealdPlayerSpawn;
 
 let playerIdx = 0;
 
