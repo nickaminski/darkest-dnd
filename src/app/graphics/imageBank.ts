@@ -1,9 +1,21 @@
+import abomination from '../../assets/tokens/Abomination.png';
+import antiquarian from '../../assets/tokens/Antiquarian.png';
+import arbalist from '../../assets/tokens/Arbalist.png';
+import bountyHunter from '../../assets/tokens/Bounty_Hunter.png';
+import crusader from '../../assets/tokens/Crusader.png';
+import graveRobber from '../../assets/tokens/Grave_Robber.png';
 import hellion from '../../assets/tokens/Hellion.png';
 import highwayman from '../../assets/tokens/Highwayman.png';
+import houndmaster from '../../assets/tokens/Houndmaster.png';
 import jester from '../../assets/tokens/Jester.png';
+import leper from '../../assets/tokens/Leper.png';
+import manAtArms from '../../assets/tokens/Man-at-Arms.png';
+import musketeer from '../../assets/tokens/Musketeer.png';
 import occultest from '../../assets/tokens/Occultist.png';
+import plagueDoctor from '../../assets/tokens/Plague_Doctor.png';
+import vestal from '../../assets/tokens/Vestal.png';
+
 import boneRabble from '../../assets/tokens/Bone_Rabble.png';
-import abomination from '../../assets/tokens/Abomination.png';
 import ancestor from '../../assets/tokens/Ancestor.png';
 import banditBloodletter from '../../assets/tokens/Bandit_Bloodletter.png';
 import banditFuselier from '../../assets/tokens/Bandit_Fuselier.png';
@@ -31,7 +43,6 @@ import collectedCleric from '../../assets/tokens/Collected_Cleric.png';
 import collectedWarrior from '../../assets/tokens/Collected_Warrior.png';
 import collector from '../../assets/tokens/Collector.png';
 import prophet from '../../assets/tokens/Prophet.png';
-import manAtArms from '../../assets/tokens/Man-at-Arms.png';
 import crone from '../../assets/tokens/Crone.png';
 
 import palette from '../../assets/icons/palette.svg';
@@ -40,14 +51,24 @@ export class ImageBank {
     static getImageUrl(imageName: string): string {
         switch(imageName)
         {
-            case 'ancestor': return ancestor;
-            case 'bone_rabble': return boneRabble;
+            case 'abomination': return abomination;
+            case 'antiquarian': return antiquarian;
+            case 'arbalist': return arbalist;
+            case 'bounty_hunter': return bountyHunter;
+            case 'crusader': return crusader;
+            case 'grave_robber': return graveRobber;
             case 'hellion': return hellion;
             case 'highwayman': return highwayman;
+            case 'houndmaster': return houndmaster;
             case 'jester': return jester;
-            case 'abomination': return abomination;
+            case 'leper': return leper;
             case 'man_at_arms': return manAtArms;
+            case 'musketeer': return musketeer;
             case 'occultist': return occultest;
+            case 'plague_doctor': return plagueDoctor;
+            case 'vestal': return vestal;
+            case 'bone_rabble': return boneRabble;
+            case 'ancestor': return ancestor;
             case 'bandit_bloodletter': return banditBloodletter;
             case 'bandit_fuselier': return banditFuselier;
             case 'bandit_cutthroat': return banditCutthroat;

@@ -250,6 +250,12 @@ io.on('connection', (socket) => {
             gameState.exploreArea(exploreData.topLeft, exploreData.area);
         }
     });
+
+    socket.on('change-image', (imageData) => {
+        if (imageData) {
+            socket.broadcast.emit('change-image', imageData);
+        }
+    });
 });
 
 server.listen(PORT, () => {

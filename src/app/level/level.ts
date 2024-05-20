@@ -92,6 +92,10 @@ export class Level {
         }
     }
 
+    getPlayer(id: string): Player {
+        return this.entities.find(x => x instanceof Player && x.id == id) as Player;
+    }
+
     getPov(): Player{
         return this.entities.find(x => x instanceof Player && x.pov) as Player;
     }

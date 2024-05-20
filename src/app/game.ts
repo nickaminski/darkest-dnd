@@ -32,6 +32,24 @@ export class Game {
                          PaintColor.FakeWall
                         ];
 
+    heroPortraitNames = ['abomination',
+                         'antiquarian',
+                         'arbalist',
+                         'bounty_hunter',
+                         'crusader',
+                         'grave_robber',
+                         'hellion',
+                         'highwayman',
+                         'houndmaster',
+                         'jester',
+                         'leper',
+                         'man_at_arms',
+                         'musketeer',
+                         'occultist',
+                         'plague_doctor',
+                         'vestal'
+                        ];
+
     adminCurrentNpcSpawnIdx: number = 0;
     adminSpawnableNpcs = [
         'slime',
@@ -230,6 +248,17 @@ export class Game {
                 }
             }
         });
+
+        this.socket.on('change-image', (imageData: {id: string, file: ArrayBuffer, name: string}) => {
+            let entity = this.level.getPlayer(imageData.id);
+            if (entity) {
+                if (imageData.file){
+                    entity.image.src = URL.createObjectURL(new Blob([new Uint8Array(imageData.file)], { type: 'application/octet-stream' }));
+                }
+                else if (imageData.name)
+                    entity.image.src = ImageBank.getImageUrl(imageData.name);
+            }
+        });
     }
 
     handleAminControls(): void {
@@ -297,15 +326,22 @@ export class Game {
         this.level.addEntity(player);
         if (pov) {
             this.camera.setCameraPosition((-player.pixelx + window.innerWidth / 2) * this.drawCtx.scale, (-player.pixely + window.innerHeight / 2) * this.drawCtx.scale);
+            this.createPlayerControls();
         }
     }
 
     createAdminControls(): void {
-        let adminContainer = document.getElementById('admin-controls');
-        adminContainer.appendChild(this.createAdminNpcPanel());
-        adminContainer.appendChild(this.createAdminNpcButton());
-        adminContainer.appendChild(this.createAdminColorPanel());
-        adminContainer.appendChild(this.createAdminColorButton());
+        let uiContainer = document.getElementById('ui-controls');
+        uiContainer.appendChild(this.createAdminNpcPanel());
+        uiContainer.appendChild(this.createAdminNpcButton());
+        uiContainer.appendChild(this.createAdminColorPanel());
+        uiContainer.appendChild(this.createAdminColorButton());
+    }
+
+    createPlayerControls(): void {
+        let uiContainer = document.getElementById('ui-controls');
+        uiContainer.appendChild(this.createPlayerPortraitButton());
+        uiContainer.appendChild(this.createPlayerPortraiPanel());
     }
 
     createAdminNpcButton(): HTMLImageElement {
@@ -360,6 +396,32 @@ export class Game {
         });
         background.appendChild(colorButton);
         return background;
+    }
+
+    createPlayerPortraitButton(): HTMLDivElement {
+        let portraitButton = document.createElement('img');
+        portraitButton.id = 'admin-npc-toggle';
+        portraitButton.role = 'button';
+        portraitButton = this.level.getPov().image;
+        portraitButton.style.position = 'fixed';
+        portraitButton.style.width = '52px';
+        portraitButton.style.height = '52px';
+        portraitButton.style.bottom = '16px';
+        portraitButton.style.left = '16px';
+        portraitButton.style.backgroundColor = 'lightgrey';
+        portraitButton.style.cursor = 'pointer';
+        portraitButton.style.userSelect = 'none';
+
+        portraitButton.addEventListener('click', e => {
+            let portraitContainer = document.getElementById('hero-portraits');
+            if (portraitContainer.style.height == '0px') {
+                portraitContainer.style.height = '208px';
+            } else {
+                portraitContainer.style.height = '0px';
+            }
+        });
+
+        return portraitButton;
     }
 
     createAdminNpcPanel(): HTMLDivElement {
@@ -439,12 +501,76 @@ export class Game {
                 button.style.borderColor = 'green';
                 this.adminCurrentColorIdx = c;
                 let hex = this.adminPaintColors[this.adminCurrentColorIdx].hex ?? '00000000';
-                console.log(hex);
                 document.getElementById('admin-color-toggle').style.backgroundColor = `#${hex}`;
             });
             colorContainer.appendChild(button);
         }
         return colorContainer;
+    }
+
+    createPlayerPortraiPanel(): HTMLDivElement {
+        let portrait = document.createElement('div');
+        portrait.id = 'hero-portraits';
+        portrait.style.position = 'fixed';
+        portrait.style.display = 'flex';
+        portrait.style.flexFlow = 'row';
+        portrait.style.flexWrap = 'wrap';
+        portrait.style.bottom = '72px';
+        portrait.style.left = '16px';
+        portrait.style.backgroundColor = 'lightgrey';
+        portrait.style.overflow = 'hidden';
+        portrait.style.height = '0px';
+        portrait.style.width = '260px';
+        portrait.style.transition = '.2s';
+
+        for (let i = 0; i < this.heroPortraitNames.length; i++) {
+            let button = document.createElement('img');
+            button.id = `btn_portrait_${this.heroPortraitNames[i]}`;
+            button.src = ImageBank.getImageUrl(this.heroPortraitNames[i]);
+            button.role = 'button';
+            button.style.border = 'solid 3px';
+            button.style.width = '48px';
+            button.style.height = '48px';
+            button.style.userSelect = 'none';
+            button.style.margin = '2px';
+            button.style.cursor = 'pointer';
+
+            button.addEventListener('click', e => {
+                (document.getElementById('custom_image') as HTMLInputElement).value = null;
+                let pov = this.level.getPov();
+                pov.image.src = ImageBank.getImageUrl(this.heroPortraitNames[i]);
+                this.socket.emit('change-image', { id: pov.id, name: this.heroPortraitNames[i]});
+            });
+            portrait.appendChild(button);
+        }
+
+        let button = document.createElement('label');
+        button.id = `btn_portrait_custom`;
+        button.role = 'button';
+        button.style.border = 'solid 3px';
+        button.style.width = '48px';
+        button.style.height = '48px';
+        button.style.userSelect = 'none';
+        button.style.margin = '2px';
+        button.style.cursor = 'pointer';
+        button.style.backgroundColor = 'green';
+
+        let input = document.createElement('input');
+        input.id = 'custom_image';
+        input.setAttribute('type', 'file');
+        input.style.display = 'none';
+        input.addEventListener('change', e => {
+            if (input.files && input.files[0]) {
+                let pov = this.level.getPov();
+                pov.image.src = URL.createObjectURL(input.files[0]);
+                this.socket.emit('change-image', { id: pov.id, file: input.files[0]});
+            }
+        });
+        button.appendChild(input);
+
+        portrait.appendChild(button);
+
+        return portrait;
     }
 }
 

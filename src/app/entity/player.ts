@@ -45,6 +45,7 @@ export class Player implements Entity {
 
         this.image.onload = () => {
             this.level.needsRedraw = true;
+            URL.revokeObjectURL(this.image.src);
         }
     }
 
