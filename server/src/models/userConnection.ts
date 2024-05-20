@@ -7,4 +7,5 @@ export interface UserConnection {
     currentTileCol: number;
     admin: boolean;
     shareVision: boolean;
+    imageFile?: ArrayBuffer;
 }

@@ -28,7 +28,7 @@ export class Player implements Entity {
     currentMovePath: PathfindingNode[];
     moving = false;
 
-    constructor(playerId: string, startTileRow: number, startTileCol: number, keyboard: Keyboard, imageName: string, pov: boolean, shareVision: boolean, socket: Socket) {
+    constructor(playerId: string, startTileRow: number, startTileCol: number, keyboard: Keyboard, imageName: string, pov: boolean, shareVision: boolean, imageData: ArrayBuffer, socket: Socket) {
         this.id = playerId;
         this.tileRow = startTileRow;
         this.tileCol = startTileCol;
@@ -37,7 +37,11 @@ export class Player implements Entity {
         this.keyboard = keyboard;
         this.image = new Image();
         
-        this.image.src = ImageBank.getImageUrl(imageName);
+        if (imageData){
+            this.image.src = URL.createObjectURL(new Blob([new Uint8Array(imageData)]));
+        } else {
+            this.image.src = ImageBank.getImageUrl(imageName);
+        }
 
         this.pov = pov;
         this.shareVision = shareVision;

@@ -177,7 +177,7 @@ export class Game {
 
     adminPlaceNpc(): void {
         let spawnData = { userId: uuid(), tileRow: this.mouse.tileRow, tileCol: this.mouse.tileCol, imageName: this.adminSpawnableNpcs[this.adminCurrentNpcSpawnIdx]};
-        this.spawnPlayer(false, spawnData.userId, spawnData.tileRow, spawnData.tileCol, spawnData.imageName, false, false);
+        this.spawnPlayer(false, spawnData.userId, spawnData.tileRow, spawnData.tileCol, spawnData.imageName, false, false, null);
         this.socket.emit('admin-spawn', spawnData);
     }
 
@@ -195,7 +195,8 @@ export class Game {
                              message.userTileCol, 
                              message.imageName, 
                              message.pov, 
-                             message.shareVision);
+                             message.shareVision,
+                             message.imageFile);
         });
 
         this.socket.on('disconnect-player', (playerId: string) => {
@@ -310,7 +311,7 @@ export class Game {
         }
     }
 
-    spawnPlayer(admin: boolean, userId: string, tileRow: number, tileCol: number, imageName: string, pov: boolean, shareVision: boolean) {
+    spawnPlayer(admin: boolean, userId: string, tileRow: number, tileCol: number, imageName: string, pov: boolean, shareVision: boolean, imageFile: ArrayBuffer) {
         this.level.needsRedraw = true;
         if (admin) 
         {
@@ -322,7 +323,7 @@ export class Game {
             return;
         }
 
-        var player = new Player(userId, tileRow, tileCol, this.keyboard, imageName, pov, shareVision, this.socket);
+        var player = new Player(userId, tileRow, tileCol, this.keyboard, imageName, pov, shareVision, imageFile, this.socket);
         this.level.addEntity(player);
         if (pov) {
             this.camera.setCameraPosition((-player.pixelx + window.innerWidth / 2) * this.drawCtx.scale, (-player.pixely + window.innerHeight / 2) * this.drawCtx.scale);

@@ -147,7 +147,8 @@ io.on('connection', (socket) => {
                                                      userTileCol: user.currentTileCol, 
                                                      pov: false, 
                                                      shareVision: true, 
-                                                     admin: false
+                                                     admin: false,
+                                                     imageFile: user.imageFile
                                                     });
     }
     
@@ -157,7 +158,15 @@ io.on('connection', (socket) => {
         if (u.admin && u.id != user.id) continue;
         if (u.socketIds.length == 0) continue;
         const me = u.id == user.id;
-        socket.emit('initialize-player', { userId: u.id, imageName: u.imageName, userTileRow: u.currentTileRow, userTileCol: u.currentTileCol, pov: me, shareVision: u.shareVision, admin: u.admin});
+        socket.emit('initialize-player', { userId: u.id,
+                                           imageName: u.imageName,
+                                           userTileRow: u.currentTileRow,
+                                           userTileCol: u.currentTileCol,
+                                           pov: me,
+                                           shareVision: u.shareVision,
+                                           admin: u.admin,
+                                           imageFile: u.imageFile
+                                        });
     }
 
     if (gameState)
@@ -253,6 +262,8 @@ io.on('connection', (socket) => {
 
     socket.on('change-image', (imageData) => {
         if (imageData) {
+            user.imageName = imageData.name;
+            user.imageFile = imageData.file;
             socket.broadcast.emit('change-image', imageData);
         }
     });
