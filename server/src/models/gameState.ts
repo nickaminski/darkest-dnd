@@ -2,8 +2,10 @@ import { GameTile } from "./gameTile";
 
 export class GameState {
     tiles: GameTile[][];
+    freezePlayerMovement: boolean;
 
     constructor(rows: number, cols: number) {
+        this.freezePlayerMovement = false;
         this.tiles = [];
         for(let r = 0; r < rows; r++) {
             this.tiles.push([]);

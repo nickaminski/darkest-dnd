@@ -42,8 +42,7 @@ export class DrawContext {
     clear() {
         this.#ctx.save();
         this.#ctx.setTransform(1, 0, 0, 1, 0 ,0);
-        this.#ctx.fillStyle = 'ffffff';
-        this.#ctx.fillRect(0, 0, this.width, this.height);
+        this.#ctx.clearRect(0, 0, this.width, this.height);
         this.#ctx.restore();
     }
 
@@ -118,6 +117,24 @@ export class DrawContext {
 
         this.ctx.stroke();
 
+        this.ctx.restore();
+    }
+
+    drawVignette() {
+        let w = this.width;
+        let h = this.height;
+        this.ctx.save();
+        this.ctx.clearRect(0, 0, w, h);
+        this.ctx.rect(0, 0, w, h);
+
+        let outerRadius = w * 0.5;
+        let innerRadius = w * 0.2;
+        var grd = this.ctx.createRadialGradient(w / 2, h / 2, innerRadius, w / 2, h / 2, outerRadius);
+        grd.addColorStop(0, 'rgba(0,0,0,0)');
+        grd.addColorStop(1, 'rgba(0,0,0,0.7)');
+        
+        this.ctx.fillStyle = grd;
+        this.ctx.fill();
         this.ctx.restore();
     }
     

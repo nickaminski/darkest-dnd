@@ -56,6 +56,10 @@ export class Keyboard {
         return this.keys.get('KeyV');
     }
 
+    public get freezePlayerMovement() {
+        return this.keys.get('KeyP');
+    }
+
     onKeyDown(e: KeyboardEvent) {
         this.keys.set(e.code, true);
     }

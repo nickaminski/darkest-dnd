@@ -56,9 +56,7 @@ export class Player implements Entity {
     update(delta: number) {
         if (this.pov) {
             if (this.keyboard.stopPlayerMovement && this.currentMovePath?.length > 0) {
-                this.stopPathMovement();
-                let targetTile = this.currentMovePath[0];
-                this.socket.emit('stopped', { id: this.id, tileRow: targetTile.tileRow, tileCol: targetTile.tileCol });
+                this.freeze();
             }
         }
         if (this.currentMovePath?.length > 0) {
@@ -139,6 +137,15 @@ export class Player implements Entity {
             while (this.currentMovePath.length > 1)
                 this.currentMovePath.shift();
         }
+    }
+
+    freeze(): void {
+        if (!this.currentMovePath) return;
+        this.stopPathMovement();
+        let targetTile = this.currentMovePath[0];
+        let row = targetTile?.tileRow ?? this.tileRow;
+        let col = targetTile?.tileCol ?? this.tileCol;
+        this.socket.emit('stopped', { id: this.id, tileRow: row, tileCol: col });
     }
 
     private sendExploredTiles(tileMap: Tile[][]) {

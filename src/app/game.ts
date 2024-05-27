@@ -15,6 +15,7 @@ export class Game {
 
     running: boolean = false;
     drawCtx: DrawContext;
+    foregroundCtx: DrawContext;
     level: Level;
     keyboard: Keyboard;
     mouse: Mouse;
@@ -62,20 +63,24 @@ export class Game {
 
     public set width(newVal: number) {
         this.drawCtx.width = newVal;
+        this.foregroundCtx.width = newVal;
     }
 
     public set height(newVal: number) {
         this.drawCtx.height = newVal;
+        this.foregroundCtx.height = newVal;
     }
 
-    constructor(canvas: HTMLCanvasElement, socket: Socket) {
-        var ctx = canvas.getContext('2d');
+    constructor(gameCanvas: HTMLCanvasElement, foregroundCanvas: HTMLCanvasElement, socket: Socket) {
+        var ctx = gameCanvas.getContext('2d');
         if (ctx == null) throw new DOMException('Could not get rendering context');
-        
-        this.drawCtx = new DrawContext(ctx, canvas.width, canvas.height);
+
+        this.drawCtx = new DrawContext(ctx, gameCanvas.width, gameCanvas.height);
+        this.foregroundCtx = new DrawContext(foregroundCanvas.getContext('2d'), foregroundCanvas.width, foregroundCanvas.height);
+        this.foregroundCtx.updateScale(1);
         this.drawCtx.updateTransform(0, 0);
-        this.width = canvas.width;
-        this.height = canvas.height;
+        this.width = gameCanvas.width;
+        this.height = gameCanvas.height;
         this.keyboard = new Keyboard();
         this.camera = new Camera(this.keyboard, this.drawCtx);
         this.mouse = new Mouse(this.keyboard);
@@ -107,7 +112,14 @@ export class Game {
     }
 
     render(): void {
-        this.level.render(this.drawCtx);
+        if (this.level.needsRedraw)
+        {
+            this.level.render(this.drawCtx);
+        }
+        if (this.level.foregroundNeedsRedraw)
+        {
+            this.level.renderForeground(this.foregroundCtx);
+        }
     }
 
     start(): void {
@@ -181,6 +193,12 @@ export class Game {
         this.socket.emit('admin-spawn', spawnData);
     }
 
+    adminFreezePlayerMovement(): void {
+        this.level.drawFreezeVignette = !this.level.drawFreezeVignette;
+        this.level.foregroundNeedsRedraw = true;
+        this.socket.emit('admin-freeze-all');
+    }
+
     registerSocketListeningEvents(): void {
         this.socket.on('connect', () => {
             if (this.level.loaded) {
@@ -232,6 +250,10 @@ export class Game {
         });
 
         this.socket.on('receive-game-state', (gameState) => {
+            if (gameState.freezePlayerMovement)
+            {
+                this.receiveFreeze();
+            }
             if (this.level.loaded)
             {
                 for(let r = 0; r < this.level.height; r++) {
@@ -260,6 +282,17 @@ export class Game {
                     entity.image.src = ImageBank.getImageUrl(imageData.name);
             }
         });
+
+        this.socket.on('freeze', () => {
+            this.receiveFreeze();
+        });
+    }
+
+    receiveFreeze(): void {
+        this.level.canPlayerMove = !this.level.canPlayerMove;
+        this.level.drawFreezeVignette = !this.level.drawFreezeVignette;
+        this.level.getPov()?.freeze();
+        this.level.foregroundNeedsRedraw = true;
     }
 
     handleAminControls(): void {
@@ -308,6 +341,12 @@ export class Game {
         {
             this.keyboard.didCycle = true;
             this.adminPlaceNpc();
+        }
+
+        if (this.keyboard.freezePlayerMovement && !this.keyboard.didCycle)
+        {
+            this.keyboard.didCycle = true;
+            this.adminFreezePlayerMovement();
         }
     }
 

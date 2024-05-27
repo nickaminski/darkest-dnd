@@ -16,14 +16,18 @@ export class Level {
     entities: Entity[];
     tileMap: Tile[][];
     needsRedraw: boolean = false;
+    foregroundNeedsRedraw: boolean = false;
     recalculateMousePath: boolean = false;
     recalculateVision: boolean = true;
     admin: boolean = false;
+    drawFreezeVignette: boolean = false;
+    canPlayerMove: boolean = true;
 
     DEBUG_USE_BRIGHTNESS = true;
     DEBUG_SHOW_TILE_LOC = false;
 
     constructor(imageRef: any, mouse: Mouse, socket: Socket) {
+        this.foregroundNeedsRedraw = true;
         this.pixelHexValues = [];
         this.entities = [];
         this.tileMap = [];
@@ -73,7 +77,10 @@ export class Level {
         }
 
         this.mouse.$mouseClick.subscribe(e=> {
-            if(this.mouse.mousePath && this.mouse.mousePath.length > 0) {
+            if(this.canPlayerMove && 
+               this.mouse.mousePath && 
+               this.mouse.mousePath.length > 0) 
+               {
                 var pov = this.getPov();
                 var thePath = [...this.mouse.mousePath];
                 pov.currentMovePath = thePath;
@@ -135,7 +142,7 @@ export class Level {
     }
 
     render(drawContext: DrawContext) {
-        if (!this.loaded || !this.needsRedraw) return;
+        if (!this.loaded) return;
         drawContext.clear();
 
         // get into tile coordinates for tile drawing
@@ -166,6 +173,15 @@ export class Level {
             drawContext.ctx.restore();
         }
         this.needsRedraw = false;
+    }
+
+    renderForeground(drawContext: DrawContext) {
+        if (this.drawFreezeVignette) {
+            drawContext.drawVignette();
+        } else {
+            drawContext.clear();
+        }
+        this.foregroundNeedsRedraw = false;
     }
 
     getTile(row: number, col: number): Tile {

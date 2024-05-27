@@ -19,13 +19,17 @@
     body {
         overflow: hidden;
     }
-
     #render {
-        top: 50%;
-        left: 50%;
+        z-index: 2;
+    }
+    #foreground {
+        z-index: 3;
+    }
+    canvas {
+        position: absolute;
     }</style>
 </head>
 
-<body><div id="ui-controls" style="position: absolute; z-index: 10;"></div><canvas id="render"></canvas></body>
+<body><div id="ui-controls" style="position: absolute; z-index: 10;"></div><canvas id="render"></canvas><canvas id="foreground"></canvas></body>
 
 </html>

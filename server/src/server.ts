@@ -267,6 +267,11 @@ io.on('connection', (socket) => {
             socket.broadcast.emit('change-image', imageData);
         }
     });
+
+    socket.on('admin-freeze-all', () => {
+        gameState.freezePlayerMovement = !gameState.freezePlayerMovement;
+        socket.broadcast.emit('freeze');
+    });
 });
 
 server.listen(PORT, () => {
