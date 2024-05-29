@@ -3,7 +3,7 @@ import { Mouse } from './input/mouse';
 import { Level } from './level/level';
 import { Keyboard } from './input/keyboard';
 import { Camera } from './entity/camera';
-import { Player } from './entity/player';
+import { Character } from './entity/character';
 import levelImage from '../assets/maps/weald.png';
 
 import { Socket } from 'socket.io-client';
@@ -127,7 +127,7 @@ export class Game {
     }
 
     adminCyclePov(): void {
-        let npcs = this.level.entities.filter(x => x instanceof Player && !x.shareVision) as Player[];
+        let npcs = this.level.entities.filter(x => x instanceof Character && !x.shareVision) as Character[];
         if (npcs.length == 0) return;
 
         let idx = npcs.findIndex(x => x.pov);
@@ -176,11 +176,11 @@ export class Game {
         }
     }
 
-    adminRemovePlayer(): void {
-        let pov = this.level.entities.find(x => x instanceof Player && x.pov);
+    adminRemoveCharacter(): void {
+        let pov = this.level.entities.find(x => x instanceof Character && x.pov);
         if (pov)
         {
-            this.socket.emit('despawn-player', pov.id);
+            this.socket.emit('despawn-character', pov.id);
             this.level.removeEntityById(pov.id);
             this.level.needsRedraw = true;
             this.level.recalculateMousePath = true;
@@ -189,11 +189,11 @@ export class Game {
 
     adminPlaceNpc(): void {
         let spawnData = { userId: uuid(), tileRow: this.mouse.tileRow, tileCol: this.mouse.tileCol, imageName: this.adminSpawnableNpcs[this.adminCurrentNpcSpawnIdx]};
-        this.spawnPlayer(false, spawnData.userId, spawnData.tileRow, spawnData.tileCol, spawnData.imageName, false, false, null);
+        this.spawnCharacter(false, spawnData.userId, spawnData.tileRow, spawnData.tileCol, spawnData.imageName, false, false, null);
         this.socket.emit('admin-spawn', spawnData);
     }
 
-    adminFreezePlayerMovement(): void {
+    adminFreezeCharacterMovement(): void {
         this.level.drawFreezeVignette = !this.level.drawFreezeVignette;
         this.level.foregroundNeedsRedraw = true;
         this.socket.emit('admin-freeze-all');
@@ -206,8 +206,8 @@ export class Game {
             }
         });
 
-        this.socket.on('initialize-player', (message: any) => {
-            this.spawnPlayer(message.admin, 
+        this.socket.on('initialize-character', (message: any) => {
+            this.spawnCharacter(message.admin, 
                              message.userId, 
                              message.userTileRow, 
                              message.userTileCol, 
@@ -217,24 +217,24 @@ export class Game {
                              message.imageFile);
         });
 
-        this.socket.on('disconnect-player', (playerId: string) => {
+        this.socket.on('disconnect-user', (playerId: string) => {
             this.level.removeEntityById(playerId);
             this.level.needsRedraw = true;
             this.level.recalculateVision = true;
         });
 
-        this.socket.on('move-player', (data) => {
-            let player = this.level.entities.find(x => x.id == data.id) as Player;
-            if (!player) return;
+        this.socket.on('move-character', (data) => {
+            let character = this.level.entities.find(x => x.id == data.id) as Character;
+            if (!character) return;
 
-            player.currentMovePath = data.path;
+            character.currentMovePath = data.path;
         });
 
-        this.socket.on('stop-player', (userId: string) => {
-            let player = this.level.entities.find(x => x.id == userId) as Player;
-            if (!player) return;
+        this.socket.on('stop-character', (userId: string) => {
+            let character = this.level.entities.find(x => x.id == userId) as Character;
+            if (!character) return;
 
-            player.stopPathMovement();
+            character.stopPathMovement();
         });
 
         this.socket.on('admin-paint', (paintData) => {
@@ -243,14 +243,14 @@ export class Game {
             this.level.needsRedraw = true;
         });
 
-        this.socket.on('despawn-player', (id) => {
+        this.socket.on('despawn-character', (id) => {
             this.level.removeEntityById(id);
             this.level.needsRedraw = true;
             this.level.recalculateVision = true;
         });
 
         this.socket.on('receive-game-state', (gameState) => {
-            if (gameState.freezePlayerMovement)
+            if (gameState.freezeCharacterMovement)
             {
                 this.receiveFreeze();
             }
@@ -273,7 +273,7 @@ export class Game {
         });
 
         this.socket.on('change-image', (imageData: {id: string, file: ArrayBuffer, name: string}) => {
-            let entity = this.level.getPlayer(imageData.id);
+            let entity = this.level.getCharacter(imageData.id);
             if (entity) {
                 if (imageData.file){
                     entity.image.src = URL.createObjectURL(new Blob([new Uint8Array(imageData.file)], { type: 'application/octet-stream' }));
@@ -289,7 +289,7 @@ export class Game {
     }
 
     receiveFreeze(): void {
-        this.level.canPlayerMove = !this.level.canPlayerMove;
+        this.level.canCharactersMove = !this.level.canCharactersMove;
         this.level.drawFreezeVignette = !this.level.drawFreezeVignette;
         this.level.getPov()?.freeze();
         this.level.foregroundNeedsRedraw = true;
@@ -325,10 +325,10 @@ export class Game {
             this.adminPlaceColor();
         }
 
-        if (this.keyboard.removePlayer && !this.keyboard.didCycle)
+        if (this.keyboard.removeCharacter && !this.keyboard.didCycle)
         {
             this.keyboard.didCycle = true;
-            this.adminRemovePlayer();
+            this.adminRemoveCharacter();
         }
 
         if (this.keyboard.cycleNpc && !this.keyboard.didCycle)
@@ -343,14 +343,14 @@ export class Game {
             this.adminPlaceNpc();
         }
 
-        if (this.keyboard.freezePlayerMovement && !this.keyboard.didCycle)
+        if (this.keyboard.freezeCharacterMovement && !this.keyboard.didCycle)
         {
             this.keyboard.didCycle = true;
-            this.adminFreezePlayerMovement();
+            this.adminFreezeCharacterMovement();
         }
     }
 
-    spawnPlayer(admin: boolean, userId: string, tileRow: number, tileCol: number, imageName: string, pov: boolean, shareVision: boolean, imageFile: ArrayBuffer) {
+    spawnCharacter(admin: boolean, userId: string, tileRow: number, tileCol: number, imageName: string, pov: boolean, shareVision: boolean, imageFile: ArrayBuffer) {
         this.level.needsRedraw = true;
         if (admin) 
         {
@@ -362,11 +362,11 @@ export class Game {
             return;
         }
 
-        var player = new Player(userId, tileRow, tileCol, this.keyboard, imageName, pov, shareVision, imageFile, this.socket);
-        this.level.addEntity(player);
+        var character = new Character(userId, tileRow, tileCol, this.keyboard, imageName, pov, shareVision, imageFile, this.socket);
+        this.level.addEntity(character);
         if (pov) {
-            this.camera.setCameraPosition((-player.pixelx + window.innerWidth / 2) * this.drawCtx.scale, (-player.pixely + window.innerHeight / 2) * this.drawCtx.scale);
-            this.createPlayerControls();
+            this.camera.setCameraPosition((-character.pixelx + window.innerWidth / 2) * this.drawCtx.scale, (-character.pixely + window.innerHeight / 2) * this.drawCtx.scale);
+            this.createUserControls();
         }
     }
 
@@ -378,10 +378,10 @@ export class Game {
         uiContainer.appendChild(this.createAdminColorButton());
     }
 
-    createPlayerControls(): void {
+    createUserControls(): void {
         let uiContainer = document.getElementById('ui-controls');
-        uiContainer.appendChild(this.createPlayerPortraitButton());
-        uiContainer.appendChild(this.createPlayerPortraiPanel());
+        uiContainer.appendChild(this.createCharacterPortraitButton());
+        uiContainer.appendChild(this.createCharacterPortraiPanel());
     }
 
     createAdminNpcButton(): HTMLImageElement {
@@ -438,7 +438,7 @@ export class Game {
         return background;
     }
 
-    createPlayerPortraitButton(): HTMLDivElement {
+    createCharacterPortraitButton(): HTMLDivElement {
         let portraitButton = document.createElement('img');
         portraitButton.id = 'admin-npc-toggle';
         portraitButton.role = 'button';
@@ -548,7 +548,7 @@ export class Game {
         return colorContainer;
     }
 
-    createPlayerPortraiPanel(): HTMLDivElement {
+    createCharacterPortraiPanel(): HTMLDivElement {
         let portrait = document.createElement('div');
         portrait.id = 'hero-portraits';
         portrait.style.position = 'fixed';

@@ -2,8 +2,8 @@
 import * as http from 'http';
 import { Server } from "socket.io";
 import { UserConnection } from './models/userConnection';
-import { SpawnData } from './models/spawnData';
 import { GameState } from './models/gameState';
+import { CharacterState } from './models/characterState';
 
 const server = http.createServer();
 const PORT = process.env.PORT || 3000;
@@ -74,37 +74,37 @@ let ruinsLv4Enemies = [
     { id: crypto.randomUUID(), imageName: 'cultist_acolyte', currentTileRow: 39, currentTileCol: 22 }
 ];
 
-let oldRoadPlayerSpawn: SpawnData[] = [
-    { imageName: 'highwayman', tileRow: 4, tileCol: 2 },
-    { imageName: 'hellion', tileRow: 2, tileCol: 2 },
-    { imageName: 'jester', tileRow: 2, tileCol: 4 },
-    { imageName: 'occultist', tileRow: 4, tileCol: 4 }
+let oldRoadPlayerSpawn: CharacterState[] = [
+    { id: crypto.randomUUID(),imageName: 'highwayman', tileRow: 4, tileCol: 2, shareVision: true },
+    { id: crypto.randomUUID(),imageName: 'hellion', tileRow: 2, tileCol: 2, shareVision: true },
+    { id: crypto.randomUUID(),imageName: 'jester', tileRow: 2, tileCol: 4, shareVision: true },
+    { id: crypto.randomUUID(),imageName: 'occultist', tileRow: 4, tileCol: 4, shareVision: true }
 ];
-let wealdPlayerSpawn: SpawnData[] = [
-    { imageName: 'highwayman', tileRow: 48, tileCol: 2 },
-    { imageName: 'hellion', tileRow: 50, tileCol: 2 },
-    { imageName: 'jester', tileRow: 50, tileCol: 4 },
-    { imageName: 'occultist', tileRow: 48, tileCol: 4 }
-];
-
-let ruins1PlayerSpawn: SpawnData[] = [
-    { imageName: 'highwayman', tileRow: 1, tileCol: 9 },
-    { imageName: 'hellion', tileRow: 1, tileCol: 10 },
-    { imageName: 'jester', tileRow: 2, tileCol: 10 },
-    { imageName: 'occultist', tileRow: 2, tileCol: 10 }
+let wealdPlayerSpawn: CharacterState[] = [
+    { id: crypto.randomUUID(),imageName: 'highwayman', tileRow: 48, tileCol: 2, shareVision: true },
+    { id: crypto.randomUUID(),imageName: 'hellion', tileRow: 50, tileCol: 2, shareVision: true },
+    { id: crypto.randomUUID(),imageName: 'jester', tileRow: 50, tileCol: 4, shareVision: true },
+    { id: crypto.randomUUID(),imageName: 'occultist', tileRow: 48, tileCol: 4, shareVision: true }
 ];
 
-let ruins2PlayerSpawn: SpawnData[] = [
-    { imageName: 'highwayman', tileRow: 1, tileCol: 61 },
-    { imageName: 'hellion', tileRow: 2, tileCol: 61 },
-    { imageName: 'jester', tileRow: 3, tileCol: 61 },
-    { imageName: 'occultist', tileRow: 4, tileCol: 61 }
+let ruins1PlayerSpawn: CharacterState[] = [
+    { id: crypto.randomUUID(),imageName: 'highwayman', tileRow: 1, tileCol: 9, shareVision: true },
+    { id: crypto.randomUUID(),imageName: 'hellion', tileRow: 1, tileCol: 10, shareVision: true },
+    { id: crypto.randomUUID(),imageName: 'jester', tileRow: 2, tileCol: 10, shareVision: true },
+    { id: crypto.randomUUID(),imageName: 'occultist', tileRow: 2, tileCol: 10, shareVision: true }
+];
+
+let ruins2PlayerSpawn: CharacterState[] = [
+    { id: crypto.randomUUID(),imageName: 'highwayman', tileRow: 1, tileCol: 61, shareVision: true },
+    { id: crypto.randomUUID(),imageName: 'hellion', tileRow: 2, tileCol: 61, shareVision: true },
+    { id: crypto.randomUUID(),imageName: 'jester', tileRow: 3, tileCol: 61, shareVision: true },
+    { id: crypto.randomUUID(),imageName: 'occultist', tileRow: 4, tileCol: 61, shareVision: true }
 ];
 
 let currentEnemies = wealdLv2Enemies;
-let playerSpawnData = wealdPlayerSpawn;
+let characterSpawnData = wealdPlayerSpawn;
 
-let playerIdx = 0;
+let characterIdx = 0;
 
 let gameState: GameState;
 
@@ -127,9 +127,9 @@ io.on('connection', (socket) => {
     let user = userConnections.find(x => x.ipAddress == ip);
     if (!user) {
         // actually a new user connecting for the first time
-        let spawnData = playerSpawnData[playerIdx]
+        let spawnData = characterSpawnData[characterIdx]
         user = { id: crypto.randomUUID(), ipAddress: ip, socketIds: [socket.id], imageName: spawnData.imageName, currentTileRow: spawnData.tileRow, currentTileCol: spawnData.tileCol, admin: adminConnection, shareVision: !adminConnection };
-        playerIdx = (playerIdx + 1) % playerSpawnData.length;
+        characterIdx = (characterIdx + 1) % characterSpawnData.length;
         userConnections.push(user);
         console.log(`A user connected from origin: ${ip} with id: ${socket.id}`);
     } else {
@@ -141,7 +141,7 @@ io.on('connection', (socket) => {
     if (user.socketIds.length == 1 && !user.admin)
     {
         // either an initial connection, or a re-connect after closing all instances/tabs so we want to let everyone know
-        socket.broadcast.emit('initialize-player', { userId: user.id, 
+        socket.broadcast.emit('initialize-character', { userId: user.id, 
                                                      imageName: user.imageName, 
                                                      userTileRow: user.currentTileRow, 
                                                      userTileCol: user.currentTileCol, 
@@ -158,7 +158,7 @@ io.on('connection', (socket) => {
         if (u.admin && u.id != user.id) continue;
         if (u.socketIds.length == 0) continue;
         const me = u.id == user.id;
-        socket.emit('initialize-player', { userId: u.id,
+        socket.emit('initialize-character', { userId: u.id,
                                            imageName: u.imageName,
                                            userTileRow: u.currentTileRow,
                                            userTileCol: u.currentTileCol,
@@ -183,7 +183,7 @@ io.on('connection', (socket) => {
         if (user.socketIds.length == 0)
         {
             // trigger despawn on all clients, but keep info incase of reconnect
-            socket.broadcast.emit('disconnect-player', user.id);
+            socket.broadcast.emit('disconnect-user', user.id);
             console.log(`User disconnected from origin: ${ip} with id: ${socket.id} - remembering ${userConnections.length} connections`);
         }
     });
@@ -197,7 +197,7 @@ io.on('connection', (socket) => {
         target.currentTileRow = clickData.path[0].tileRow;
         target.currentTileCol = clickData.path[0].tileCol;
 
-        socket.broadcast.emit('move-player', { id: target.id, path: clickData.path } );
+        socket.broadcast.emit('move-character', { id: target.id, path: clickData.path } );
     });
 
     socket.on('stopped', (clickData) => {
@@ -207,7 +207,7 @@ io.on('connection', (socket) => {
         target.currentTileRow = clickData.tileRow;
         target.currentTileCol = clickData.tileCol;
 
-        socket.broadcast.emit('stop-player', target.id);
+        socket.broadcast.emit('stop-character', target.id);
     });
 
     socket.on('create-game-state', (initData) => {
@@ -234,7 +234,7 @@ io.on('connection', (socket) => {
             shareVision: false 
         };
         userConnections.push(spawn);
-        socket.broadcast.emit('initialize-player', { userId: spawn.id, 
+        socket.broadcast.emit('initialize-character', { userId: spawn.id, 
                                                      imageName: spawn.imageName, 
                                                      userTileRow: spawn.currentTileRow, 
                                                      userTileCol: spawn.currentTileCol, 
@@ -244,13 +244,13 @@ io.on('connection', (socket) => {
                                                 });
     });
 
-    socket.on('despawn-player', (id) => {
+    socket.on('despawn-character', (id) => {
         let idx = userConnections.findIndex(x => x.id == id);
         if (idx != -1)
         {
             userConnections.splice(idx, 1);
         }
-        socket.broadcast.emit('despawn-player', id);
+        socket.broadcast.emit('despawn-character', id);
     });
 
     socket.on('explored-area', (exploreData) => {
@@ -269,7 +269,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('admin-freeze-all', () => {
-        gameState.freezePlayerMovement = !gameState.freezePlayerMovement;
+        gameState.freezeCharacterMovement = !gameState.freezeCharacterMovement;
         socket.broadcast.emit('freeze');
     });
 });

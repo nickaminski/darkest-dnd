@@ -1,6 +1,6 @@
 import { Socket } from "socket.io-client";
 import { Entity } from "../entity/entity";
-import { Player } from "../entity/player";
+import { Character } from "../entity/character";
 import { DrawContext } from "../graphics/drawContext";
 import { Mouse } from "../input/mouse";
 import { PathfindingNode } from "./pathfindingNode";
@@ -21,7 +21,7 @@ export class Level {
     recalculateVision: boolean = true;
     admin: boolean = false;
     drawFreezeVignette: boolean = false;
-    canPlayerMove: boolean = true;
+    canCharactersMove: boolean = true;
 
     DEBUG_USE_BRIGHTNESS = true;
     DEBUG_SHOW_TILE_LOC = false;
@@ -64,7 +64,7 @@ export class Level {
             this.needsRedraw = true;
             
             this.entities.forEach(e => {
-                if (e instanceof Player) {
+                if (e instanceof Character) {
                     e.init(this);
                     e.calculateVision(this.tileMap);
                 }
@@ -77,7 +77,7 @@ export class Level {
         }
 
         this.mouse.$mouseClick.subscribe(e=> {
-            if(this.canPlayerMove && 
+            if(this.canCharactersMove && 
                this.mouse.mousePath && 
                this.mouse.mousePath.length > 0) 
                {
@@ -93,18 +93,18 @@ export class Level {
     addEntity(e: Entity) {
         this.entities.push(e);
 
-        if (e instanceof Player && this.loaded) {
+        if (e instanceof Character && this.loaded) {
             e.init(this);
             e.calculateVision(this.tileMap);
         }
     }
 
-    getPlayer(id: string): Player {
-        return this.entities.find(x => x instanceof Player && x.id == id) as Player;
+    getCharacter(id: string): Character {
+        return this.entities.find(x => x instanceof Character && x.id == id) as Character;
     }
 
-    getPov(): Player{
-        return this.entities.find(x => x instanceof Player && x.pov) as Player;
+    getPov(): Character{
+        return this.entities.find(x => x instanceof Character && x.pov) as Character;
     }
 
     removeEntityById(id: string) {
@@ -120,7 +120,7 @@ export class Level {
 
         if (this.recalculateVision) {
             this.tileMap.forEach(row => row.forEach(col => {col.brightness = 0}));
-            this.entities.forEach(e => {if (e instanceof Player) e.calculateVision(this.tileMap); });
+            this.entities.forEach(e => {if (e instanceof Character) e.calculateVision(this.tileMap); });
             this.recalculateVision = false;
         }
 

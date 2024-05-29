@@ -24,7 +24,7 @@ export class Keyboard {
         return this.keys.get('KeyZ');
     }
 
-    public get stopPlayerMovement() {
+    public get stopCharacterMovement() {
         return this.keys.get('Space');
     }
 
@@ -44,7 +44,7 @@ export class Keyboard {
         return this.keys.get('KeyC');
     }
 
-    public get removePlayer() {
+    public get removeCharacter() {
         return this.keys.get('Escape');
     }
 
@@ -56,7 +56,7 @@ export class Keyboard {
         return this.keys.get('KeyV');
     }
 
-    public get freezePlayerMovement() {
+    public get freezeCharacterMovement() {
         return this.keys.get('KeyP');
     }
 

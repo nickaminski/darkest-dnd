@@ -8,7 +8,7 @@ import { Tile } from "../level/tile/tile";
 import { Entity } from "./entity";
 import { ImageBank } from "../graphics/imageBank";
 
-export class Player implements Entity {
+export class Character implements Entity {
     id: string;
     pixelx: number;
     pixely: number;
@@ -28,8 +28,8 @@ export class Player implements Entity {
     currentMovePath: PathfindingNode[];
     moving = false;
 
-    constructor(playerId: string, startTileRow: number, startTileCol: number, keyboard: Keyboard, imageName: string, pov: boolean, shareVision: boolean, imageData: ArrayBuffer, socket: Socket) {
-        this.id = playerId;
+    constructor(characterId: string, startTileRow: number, startTileCol: number, keyboard: Keyboard, imageName: string, pov: boolean, shareVision: boolean, imageData: ArrayBuffer, socket: Socket) {
+        this.id = characterId;
         this.tileRow = startTileRow;
         this.tileCol = startTileCol;
         this.pixelx = this.tileCol << Tile.TileSizeShift;
@@ -55,7 +55,7 @@ export class Player implements Entity {
 
     update(delta: number) {
         if (this.pov) {
-            if (this.keyboard.stopPlayerMovement && this.currentMovePath?.length > 0) {
+            if (this.keyboard.stopCharacterMovement && this.currentMovePath?.length > 0) {
                 this.freeze();
             }
         }
