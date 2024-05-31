@@ -22,6 +22,7 @@ export class Level {
     admin: boolean = false;
     drawFreezeVignette: boolean = false;
     canCharactersMove: boolean = true;
+    currentPovCharacter: Character;
 
     DEBUG_USE_BRIGHTNESS = true;
     DEBUG_SHOW_TILE_LOC = false;
@@ -66,7 +67,7 @@ export class Level {
             this.entities.forEach(e => {
                 if (e instanceof Character) {
                     e.init(this);
-                    e.calculateVision(this.tileMap);
+                    e.calculateVision(this.tileMap, e.playerId);
                 }
             });
 
@@ -77,15 +78,15 @@ export class Level {
         }
 
         this.mouse.$mouseClick.subscribe(e=> {
-            if(this.canCharactersMove && 
-               this.mouse.mousePath && 
-               this.mouse.mousePath.length > 0) 
-               {
-                var pov = this.getPov();
-                var thePath = [...this.mouse.mousePath];
-                pov.currentMovePath = thePath;
-
-                socket.emit('click', {id: pov.id, path: thePath });
+            if(this.currentPovCharacter &&
+                this.canCharactersMove && 
+                this.mouse.mousePath && 
+                this.mouse.mousePath.length > 0) 
+                {
+                   var thePath = [...this.mouse.mousePath];
+                   this.currentPovCharacter.currentMovePath = thePath;
+       
+                   socket.emit('click', {id: this.currentPovCharacter.id, path: thePath });
             }
         });
     }
@@ -95,7 +96,7 @@ export class Level {
 
         if (e instanceof Character && this.loaded) {
             e.init(this);
-            e.calculateVision(this.tileMap);
+            e.calculateVision(this.tileMap, e.playerId);
         }
     }
 
@@ -103,8 +104,8 @@ export class Level {
         return this.entities.find(x => x instanceof Character && x.id == id) as Character;
     }
 
-    getPov(): Character{
-        return this.entities.find(x => x instanceof Character && x.pov) as Character;
+    getPlayerCharacters(playerId: string): Character[] {
+        return this.entities.filter(x => x instanceof Character && x.playerId == playerId) as Character[];
     }
 
     removeEntityById(id: string) {
@@ -115,12 +116,16 @@ export class Level {
         }
     }
 
+    removeEntitiesByPlayerId(playerId: string) {
+        this.entities = this.entities.filter(x => x instanceof Character && x.playerId != playerId);
+    }
+
     update(delta: number) {
         if (!this.loaded) return;
 
         if (this.recalculateVision) {
             this.tileMap.forEach(row => row.forEach(col => {col.brightness = 0}));
-            this.entities.forEach(e => {if (e instanceof Character) e.calculateVision(this.tileMap); });
+            this.entities.forEach(e => {if (e instanceof Character) e.calculateVision(this.tileMap, e.playerId); });
             this.recalculateVision = false;
         }
 
@@ -129,10 +134,9 @@ export class Level {
         if (this.recalculateMousePath)
         {
             this.recalculateMousePath = false;
-            var pov = this.getPov();
-            if (pov)
+            if (this.currentPovCharacter)
             {
-                this.mouse.mousePath = this.findPath(pov.tileRow, pov.tileCol, this.mouse.tileRow, this.mouse.tileCol);
+                this.mouse.mousePath = this.findPath(this.currentPovCharacter.tileRow, this.currentPovCharacter.tileCol, this.mouse.tileRow, this.mouse.tileCol);
             }
             else
             {
@@ -143,7 +147,7 @@ export class Level {
 
     render(drawContext: DrawContext) {
         if (!this.loaded) return;
-        drawContext.clear();
+        drawContext.clearBlack();
 
         // get into tile coordinates for tile drawing
         const x0 = (-drawContext.transformX / drawContext.scale) >> Tile.TileSizeShift;
@@ -158,7 +162,16 @@ export class Level {
             }
         }
 
-        this.entities.forEach(e => e.render(drawContext));
+        this.entities.forEach(e => {
+            e.render(drawContext);
+            if (e instanceof Character && this.currentPovCharacter) {
+                if (e.id == this.currentPovCharacter.id) {
+                    drawContext.highlightTile(e.tileRow, e.tileCol, '00ff00ff');
+                } else if (e.playerId == this.currentPovCharacter.playerId) {
+                    drawContext.highlightTile(e.tileRow, e.tileCol, '0000ffff');
+                } 
+            }
+        });
 
         this.mouse.render(drawContext);
 

@@ -21,6 +21,8 @@ export class Game {
     mouse: Mouse;
     camera: Camera;
 
+    playerId: string;
+
     admin: boolean = false;
     adminCurrentColorIdx: number = 0;
     adminPaintColors = [ PaintColor.Clear, 
@@ -105,6 +107,8 @@ export class Game {
         this.level.update(delta);
         this.camera.update(delta, this.level);
 
+        this.handlePlayerControls();
+
         if (this.admin)
         {
             this.handleAminControls();
@@ -126,23 +130,29 @@ export class Game {
         this.running = true;
     }
 
-    adminCyclePov(): void {
-        let npcs = this.level.entities.filter(x => x instanceof Character && !x.shareVision) as Character[];
+    cyclePov(): void {
+        let npcs = this.level.entities.filter(x => x instanceof Character && x.playerId == this.playerId) as Character[];
         if (npcs.length == 0) return;
 
-        let idx = npcs.findIndex(x => x.pov);
-        if (idx != -1)
-        {
-            npcs[idx].pov = false;
-        }
-        idx = npcs.findIndex(x => x.tileCol == this.mouse.tileCol && x.tileRow == this.mouse.tileRow);
+        let idx = npcs.findIndex(x => x.tileCol == this.mouse.tileCol && x.tileRow == this.mouse.tileRow);
         if (idx != -1)
         {
             npcs[idx].pov = true;
+            this.level.currentPovCharacter = npcs[idx];
+            if (!this.admin) {
+                this.setCharacterPortraitButtonImage(this.level.currentPovCharacter.image.src);
+            }
         }
-
         this.level.recalculateMousePath = true;
         this.level.needsRedraw = true;
+    }
+
+    handlePlayerControls() {
+        if (this.keyboard.cyclePov && !this.keyboard.didCycle)
+        {
+            this.keyboard.didCycle = true;
+            this.cyclePov();
+        }
     }
 
     adminCycleNpcs(): void {
@@ -151,7 +161,7 @@ export class Game {
         (document.getElementById('admin-npc-toggle') as HTMLImageElement).src = ImageBank.getImageUrl(this.adminSpawnableNpcs[this.adminCurrentNpcSpawnIdx]);
 
         for (let i = 0; i < this.adminSpawnableNpcs.length; i++) {
-            let b = document.getElementById(`btn_adminNpc_${this.adminSpawnableNpcs[i]}`);
+            let b = document.getElementById(`btn-adminNpc-${this.adminSpawnableNpcs[i]}`);
             b.style.borderColor = this.adminCurrentNpcSpawnIdx == i ? 'green' : 'black';
         }
     }
@@ -161,7 +171,7 @@ export class Game {
         let hex = this.adminPaintColors[this.adminCurrentColorIdx].hex ?? '00000000';
         document.getElementById('admin-color-toggle').style.backgroundColor = `#${hex}`;
         for (let c = 0; c < this.adminPaintColors.length; c++) {
-            let b = document.getElementById(`btn_adminColor_${this.adminPaintColors[c].name}`);
+            let b = document.getElementById(`btn-adminColor-${this.adminPaintColors[c].name}`);
             b.style.borderColor = this.adminCurrentColorIdx == c ? 'green' : 'black';
         }
     }
@@ -177,19 +187,18 @@ export class Game {
     }
 
     adminRemoveCharacter(): void {
-        let pov = this.level.entities.find(x => x instanceof Character && x.pov);
-        if (pov)
+        if (this.level.currentPovCharacter)
         {
-            this.socket.emit('despawn-character', pov.id);
-            this.level.removeEntityById(pov.id);
+            this.socket.emit('despawn-character', {playerId: this.playerId, characterId: this.level.currentPovCharacter.id});
+            this.level.removeEntityById(this.level.currentPovCharacter.id);
+            this.level.currentPovCharacter = null;
             this.level.needsRedraw = true;
             this.level.recalculateMousePath = true;
         }
     }
 
     adminPlaceNpc(): void {
-        let spawnData = { userId: uuid(), tileRow: this.mouse.tileRow, tileCol: this.mouse.tileCol, imageName: this.adminSpawnableNpcs[this.adminCurrentNpcSpawnIdx]};
-        this.spawnCharacter(false, spawnData.userId, spawnData.tileRow, spawnData.tileCol, spawnData.imageName, false, false, null);
+        let spawnData = { playerId: this.playerId, tileRow: this.mouse.tileRow, tileCol: this.mouse.tileCol, imageName: this.adminSpawnableNpcs[this.adminCurrentNpcSpawnIdx]};
         this.socket.emit('admin-spawn', spawnData);
     }
 
@@ -206,19 +215,28 @@ export class Game {
             }
         });
 
-        this.socket.on('initialize-character', (message: any) => {
-            this.spawnCharacter(message.admin, 
-                             message.userId, 
-                             message.userTileRow, 
-                             message.userTileCol, 
-                             message.imageName, 
-                             message.pov, 
-                             message.shareVision,
-                             message.imageFile);
+        this.socket.on('assign-player-data', (data) => {
+            this.playerId = data.id;
+            this.admin = data.admin;
+            this.level.admin = data.admin;
+            this.level.DEBUG_USE_BRIGHTNESS = !data.admin;
+
+            if (data.admin) {
+                this.createAdminControls();
+            } else {
+                this.createUserControls();
+            }
+        });
+
+        this.socket.on('initialize-characters', (characterList: any) => {
+            characterList.forEach((character: any) => {
+                this.spawnCharacter(character);
+            });
+            this.level.recalculateVision = true;
         });
 
         this.socket.on('disconnect-user', (playerId: string) => {
-            this.level.removeEntityById(playerId);
+            this.level.removeEntitiesByPlayerId(playerId);
             this.level.needsRedraw = true;
             this.level.recalculateVision = true;
         });
@@ -264,16 +282,12 @@ export class Game {
                         localTile.explored = serverTile.explored;
                     }
                 }
-                let pov = this.level.getPov();
-                if (pov)
-                {
-                    pov.calculateVision(this.level.tileMap);
-                }
+                this.level.recalculateVision = true;
             }
         });
 
-        this.socket.on('change-image', (imageData: {id: string, file: ArrayBuffer, name: string}) => {
-            let entity = this.level.getCharacter(imageData.id);
+        this.socket.on('change-image', (imageData: {characterId: string, file: ArrayBuffer, name: string}) => {
+            let entity = this.level.getCharacter(imageData.characterId);
             if (entity) {
                 if (imageData.file){
                     entity.image.src = URL.createObjectURL(new Blob([new Uint8Array(imageData.file)], { type: 'application/octet-stream' }));
@@ -291,7 +305,11 @@ export class Game {
     receiveFreeze(): void {
         this.level.canCharactersMove = !this.level.canCharactersMove;
         this.level.drawFreezeVignette = !this.level.drawFreezeVignette;
-        this.level.getPov()?.freeze();
+
+        for(let c of this.level.getPlayerCharacters(this.playerId)) {
+            c.freeze();
+        }
+        
         this.level.foregroundNeedsRedraw = true;
     }
 
@@ -305,12 +323,6 @@ export class Game {
         {
             this.level.DEBUG_USE_BRIGHTNESS = false;
             this.level.needsRedraw = true;
-        }
-
-        if (this.keyboard.cyclePov && !this.keyboard.didCycle)
-        {
-            this.keyboard.didCycle = true;
-            this.adminCyclePov();
         }
 
         if (this.keyboard.cycleColor && !this.keyboard.didCycle)
@@ -350,23 +362,26 @@ export class Game {
         }
     }
 
-    spawnCharacter(admin: boolean, userId: string, tileRow: number, tileCol: number, imageName: string, pov: boolean, shareVision: boolean, imageFile: ArrayBuffer) {
+    spawnCharacter(characterData: any) {
         this.level.needsRedraw = true;
-        if (admin) 
-        {
-            this.admin = true;
-            this.level.admin = true;
-            this.level.DEBUG_USE_BRIGHTNESS = false;
 
-            this.createAdminControls();
-            return;
-        }
+        let povExistsForPlayer = this.level.entities.findIndex(x => x instanceof Character && x.pov) != -1;
+        let characterForPlayer = characterData.playerId == this.playerId;
 
-        var character = new Character(userId, tileRow, tileCol, this.keyboard, imageName, pov, shareVision, imageFile, this.socket);
+        let pov = !povExistsForPlayer && characterForPlayer;
+        var character = new Character(characterData.id, characterData.playerId,
+                                      characterData.tileRow, characterData.tileCol,
+                                      this.keyboard, characterData.imageName,
+                                      pov, characterData.shareVision,
+                                      characterData.imageFile, this.socket);
         this.level.addEntity(character);
         if (pov) {
+            this.level.currentPovCharacter = character;
             this.camera.setCameraPosition((-character.pixelx + window.innerWidth / 2) * this.drawCtx.scale, (-character.pixely + window.innerHeight / 2) * this.drawCtx.scale);
-            this.createUserControls();
+            
+            if (!this.admin) {
+                this.setCharacterPortraitButtonImage(character.image.src);
+            }
         }
     }
 
@@ -382,6 +397,10 @@ export class Game {
         let uiContainer = document.getElementById('ui-controls');
         uiContainer.appendChild(this.createCharacterPortraitButton());
         uiContainer.appendChild(this.createCharacterPortraiPanel());
+    }
+
+    setCharacterPortraitButtonImage(src: string) {
+        (document.getElementById('btn-current-portrait') as HTMLImageElement).src = src;
     }
 
     createAdminNpcButton(): HTMLImageElement {
@@ -438,11 +457,10 @@ export class Game {
         return background;
     }
 
-    createCharacterPortraitButton(): HTMLDivElement {
+    createCharacterPortraitButton(): HTMLImageElement {
         let portraitButton = document.createElement('img');
-        portraitButton.id = 'admin-npc-toggle';
+        portraitButton.id = 'btn-current-portrait';
         portraitButton.role = 'button';
-        portraitButton = this.level.getPov().image;
         portraitButton.style.position = 'fixed';
         portraitButton.style.width = '52px';
         portraitButton.style.height = '52px';
@@ -480,7 +498,7 @@ export class Game {
         for (let c = 0; c < this.adminSpawnableNpcs.length; c++) {
             let npc = this.adminSpawnableNpcs[c];
             let button = document.createElement('img');
-            button.id = `btn_adminNpc_${npc}`;
+            button.id = `btn-adminNpc-${npc}`;
             button.role = 'button';
             button.src = ImageBank.getImageUrl(npc);
             button.title = npc;
@@ -495,7 +513,7 @@ export class Game {
 
             button.addEventListener('click', e => { 
                 for (let i = 0; i < this.adminSpawnableNpcs.length; i++) {
-                    document.getElementById(`btn_adminNpc_${this.adminSpawnableNpcs[i]}`).style.borderColor = 'black';
+                    document.getElementById(`btn-adminNpc-${this.adminSpawnableNpcs[i]}`).style.borderColor = 'black';
                 }
                 button.style.borderColor = 'green';
                 this.adminCurrentNpcSpawnIdx = c;
@@ -523,7 +541,7 @@ export class Game {
         for (let c = 0; c < this.adminPaintColors.length; c++) {
             let color = this.adminPaintColors[c];
             let button = document.createElement('div');
-            button.id = `btn_adminColor_${color.name}`;
+            button.id = `btn-adminColor-${color.name}`;
             button.role = 'button';
             button.style.backgroundColor = `#${color.hex}`;
             button.style.border = 'solid 3px';
@@ -536,7 +554,7 @@ export class Game {
 
             button.addEventListener('click', e => { 
                 for (let i = 0; i < this.adminPaintColors.length; i++) {
-                    document.getElementById(`btn_adminColor_${this.adminPaintColors[i].name}`).style.borderColor = 'black';
+                    document.getElementById(`btn-adminColor-${this.adminPaintColors[i].name}`).style.borderColor = 'black';
                 }
                 button.style.borderColor = 'green';
                 this.adminCurrentColorIdx = c;
@@ -565,7 +583,7 @@ export class Game {
 
         for (let i = 0; i < this.heroPortraitNames.length; i++) {
             let button = document.createElement('img');
-            button.id = `btn_portrait_${this.heroPortraitNames[i]}`;
+            button.id = `btn-portrait-${this.heroPortraitNames[i]}`;
             button.src = ImageBank.getImageUrl(this.heroPortraitNames[i]);
             button.role = 'button';
             button.style.border = 'solid 3px';
@@ -576,16 +594,17 @@ export class Game {
             button.style.cursor = 'pointer';
 
             button.addEventListener('click', e => {
-                (document.getElementById('custom_image') as HTMLInputElement).value = null;
-                let pov = this.level.getPov();
-                pov.image.src = ImageBank.getImageUrl(this.heroPortraitNames[i]);
-                this.socket.emit('change-image', { id: pov.id, name: this.heroPortraitNames[i]});
+                (document.getElementById('custom-image') as HTMLInputElement).value = null;
+                let src = ImageBank.getImageUrl(this.heroPortraitNames[i]);
+                this.level.currentPovCharacter.image.src = src;
+                this.setCharacterPortraitButtonImage(src);
+                this.socket.emit('change-image', { characterId: this.level.currentPovCharacter.id, name: this.heroPortraitNames[i]});
             });
             portrait.appendChild(button);
         }
 
         let button = document.createElement('label');
-        button.id = `btn_portrait_custom`;
+        button.id = `btn-portrait-custom`;
         button.role = 'button';
         button.style.border = 'solid 3px';
         button.style.width = '48px';
@@ -596,14 +615,15 @@ export class Game {
         button.style.backgroundColor = 'green';
 
         let input = document.createElement('input');
-        input.id = 'custom_image';
+        input.id = 'custom-image';
         input.setAttribute('type', 'file');
         input.style.display = 'none';
         input.addEventListener('change', e => {
             if (input.files && input.files[0]) {
-                let pov = this.level.getPov();
-                pov.image.src = URL.createObjectURL(input.files[0]);
-                this.socket.emit('change-image', { id: pov.id, file: input.files[0]});
+                let src = URL.createObjectURL(input.files[0]);
+                this.level.currentPovCharacter.image.src = src;
+                this.setCharacterPortraitButtonImage(src);
+                this.socket.emit('change-image', { characterId: this.level.currentPovCharacter.id, file: input.files[0]});
             }
         });
         button.appendChild(input);
@@ -612,10 +632,4 @@ export class Game {
 
         return portrait;
     }
-}
-
-function uuid() {
-    return ('10000000-1000-4000-8000-100000000000').replace(/[018]/g, c => (
-        parseInt(c) ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (parseInt(c) / 4)))).toString(16)
-    );
 }

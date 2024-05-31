@@ -10,6 +10,7 @@ import { ImageBank } from "../graphics/imageBank";
 
 export class Character implements Entity {
     id: string;
+    playerId: string;
     pixelx: number;
     pixely: number;
     tileRow: number;
@@ -28,8 +29,9 @@ export class Character implements Entity {
     currentMovePath: PathfindingNode[];
     moving = false;
 
-    constructor(characterId: string, startTileRow: number, startTileCol: number, keyboard: Keyboard, imageName: string, pov: boolean, shareVision: boolean, imageData: ArrayBuffer, socket: Socket) {
+    constructor(characterId: string, playerId: string, startTileRow: number, startTileCol: number, keyboard: Keyboard, imageName: string, pov: boolean, shareVision: boolean, imageData: ArrayBuffer, socket: Socket) {
         this.id = characterId;
+        this.playerId = playerId;
         this.tileRow = startTileRow;
         this.tileCol = startTileCol;
         this.pixelx = this.tileCol << Tile.TileSizeShift;
@@ -49,7 +51,6 @@ export class Character implements Entity {
 
         this.image.onload = () => {
             this.level.needsRedraw = true;
-            URL.revokeObjectURL(this.image.src);
         }
     }
 
@@ -70,11 +71,6 @@ export class Character implements Entity {
     render(drawCtx: DrawContext) {
         if (this.level.getBrightness(this.tileRow, this.tileCol) >= BrightnessLevel.Dim)
             drawCtx.drawImage(this.pixelx, this.pixely, this.image, Tile.TileSize, Tile.TileSize);
-
-        if (this.pov)
-        {
-            drawCtx.highlightTile(this.tileRow, this.tileCol, '00ff00ff');
-        }
     }
 
     move(delta: number) {
@@ -102,10 +98,11 @@ export class Character implements Entity {
         this.pixely += dirY * this.moveSpeed * delta;
     }
 
-    calculateVision(tileMap: Tile[][]) {
+    calculateVision(tileMap: Tile[][], playerId: string) {
         if (!this.shareVision || !this.level.loaded) return;
         this.floodVision(0, this.tileRow, this.tileCol, tileMap);
-        if (this.pov)
+        
+        if (this.playerId == playerId && this.moving)
         {
             this.sendExploredTiles(tileMap);
         }

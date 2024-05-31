@@ -46,6 +46,14 @@ export class DrawContext {
         this.#ctx.restore();
     }
 
+    clearBlack() {
+        this.#ctx.save();
+        this.#ctx.setTransform(1, 0, 0, 1, 0 ,0);
+        this.#ctx.fillStyle = 'ffffff';
+        this.#ctx.fillRect(0, 0, this.width, this.height);
+        this.#ctx.restore();
+    }
+
     updateScale(scale: number) {
         this.scale = scale;
         var t = this.#ctx.getTransform();

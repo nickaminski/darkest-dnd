@@ -68,7 +68,7 @@ export class Mouse {
         if (oldX != this.tileCol || oldY != this.tileRow) {
             level.recalculateMousePath = true;
         }
-
+        
         if (this.mouseDown) {
             this.mouseDragging = true;
         }
