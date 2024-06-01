@@ -29,7 +29,7 @@ export class Character implements Entity {
     currentMovePath: PathfindingNode[];
     moving = false;
 
-    constructor(characterId: string, playerId: string, startTileRow: number, startTileCol: number, keyboard: Keyboard, imageName: string, pov: boolean, shareVision: boolean, imageData: ArrayBuffer, socket: Socket) {
+    constructor(characterId: string, playerId: string, startTileRow: number, startTileCol: number, keyboard: Keyboard, imageName: string, shareVision: boolean, imageData: ArrayBuffer, socket: Socket) {
         this.id = characterId;
         this.playerId = playerId;
         this.tileRow = startTileRow;
@@ -45,7 +45,6 @@ export class Character implements Entity {
             this.image.src = ImageBank.getImageUrl(imageName);
         }
 
-        this.pov = pov;
         this.shareVision = shareVision;
         this.socket = socket;
     }

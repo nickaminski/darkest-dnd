@@ -55,6 +55,7 @@ export class Mouse {
     public render(drawCtx: DrawContext) {
         if (this.keyboard.drawPath)
             drawCtx.drawPath(this.mousePath);
+        
     }
 
     public onMouseMove(e: MouseEvent, level: Level, drawContext: DrawContext, camera: Camera) {
@@ -64,16 +65,17 @@ export class Mouse {
         this.y = e.clientY;
         this.tileCol = ((this.x - drawContext.transformX) / drawContext.scale) >> Tile.TileSizeShift;
         this.tileRow = ((this.y - drawContext.transformY) / drawContext.scale) >> Tile.TileSizeShift;
-        level.needsRedraw = true;
         if (oldX != this.tileCol || oldY != this.tileRow) {
+            level.needsRedraw = true;
             level.recalculateMousePath = true;
         }
         
         if (this.mouseDown) {
             this.mouseDragging = true;
         }
-
+        
         if (this.mouseDragging) {
+            level.needsRedraw = true;
             camera.setCameraPosition(e.clientX - this.lastDragPos.x + camera.x , e.clientY - this.lastDragPos.y + camera.y);
             this.lastDragPos = { x: e.clientX, y: e.clientY };
         }

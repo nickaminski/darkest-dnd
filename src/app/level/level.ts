@@ -22,7 +22,24 @@ export class Level {
     admin: boolean = false;
     drawFreezeVignette: boolean = false;
     canCharactersMove: boolean = true;
-    currentPovCharacter: Character;
+
+    private _currentPovCharacter: Character;
+
+    public get currentPovCharacter() {
+        return this._currentPovCharacter;
+    }
+
+    public set currentPovCharacter(val: Character) {
+        if (this._currentPovCharacter) {
+            this._currentPovCharacter.pov = false;
+        }
+
+        this._currentPovCharacter = val;
+
+        if (this._currentPovCharacter) {
+            this._currentPovCharacter.pov = true;
+        }
+    }
 
     DEBUG_USE_BRIGHTNESS = true;
     DEBUG_SHOW_TILE_LOC = false;

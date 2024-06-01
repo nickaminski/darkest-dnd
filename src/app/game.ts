@@ -136,11 +136,9 @@ export class Game {
         let idx = npcs.findIndex(x => x.tileCol == this.mouse.tileCol && x.tileRow == this.mouse.tileRow);
         if (idx != -1)
         {
-            npcs[idx].pov = true;
             this.level.currentPovCharacter = npcs[idx];
             this.setCharacterPortraitButtonImage(this.level.currentPovCharacter.image.src);
         } else if (this.admin) {
-            npcs.forEach(x => x.pov = false);
             this.level.currentPovCharacter = null;
         }
         this.level.recalculateMousePath = true;
@@ -229,7 +227,6 @@ export class Game {
 
         if (characters && characters.length > 0) {
             // race condition for characters loading before player gets their id
-            characters[0].pov = true;
             this.level.currentPovCharacter = characters[0];
             this.camera.goToCharacter(characters[0]);
             
@@ -302,7 +299,6 @@ export class Game {
                 let myCharacters = this.level.getPlayerCharacters(this.playerId);
                 if (myCharacters.length > 0) {
                     this.level.currentPovCharacter = myCharacters[0];
-                    myCharacters[0].pov = true;
                     this.setCharacterPortraitButtonImage(myCharacters[0].image.src);
                 } else {
                     this.level.currentPovCharacter = null;
@@ -385,14 +381,14 @@ export class Game {
     spawnCharacter(characterData: any) {
         this.level.needsRedraw = true;
 
-        let povExistsForPlayer = this.level.entities.findIndex(x => x instanceof Character && x.pov) != -1;
+        let povExistsForPlayer = this.level.currentPovCharacter != null;
         let characterForPlayer = characterData.playerId == this.playerId;
 
         let pov = !povExistsForPlayer && characterForPlayer;
         var character = new Character(characterData.id, characterData.playerId,
                                       characterData.tileRow, characterData.tileCol,
                                       this.keyboard, characterData.imageName,
-                                      pov, characterData.shareVision,
+                                      characterData.shareVision,
                                       characterData.imageFile, this.socket);
         this.level.addEntity(character);
         if (pov) {
