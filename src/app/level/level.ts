@@ -35,7 +35,7 @@ export class Level {
         this.tileMap = [];
         this.mouse = mouse;
 
-        this.mouse.$mouseClick.subscribe(e=> {
+        this.mouse.$mouseClick.subscribe(e=> {            
             if(this.currentPovCharacter &&
                 this.canCharactersMove && 
                 this.mouse.mousePath && 
@@ -110,11 +110,12 @@ export class Level {
         return this.entities.filter(x => x instanceof Character && x.playerId == playerId) as Character[];
     }
 
-    removeEntityById(id: string) {
+    removeCharacterById(id: string): Character {
         const idx = this.entities.findIndex(x => x.id == id);
 
         if (idx != -1) {
-            this.entities.splice(idx, 1);
+            let entity = this.entities.splice(idx, 1)[0];
+            if (entity instanceof Character) return entity as Character;
         }
     }
 
@@ -210,7 +211,7 @@ export class Level {
     }
 
     receiveFreeze(playerId: string): void {
-        this.canCharactersMove = !this.canCharactersMove;
+        this.canCharactersMove = (!this.canCharactersMove || this.admin);
         this.drawFreezeVignette = !this.drawFreezeVignette;
 
         for(let c of this.getPlayerCharacters(playerId)) {

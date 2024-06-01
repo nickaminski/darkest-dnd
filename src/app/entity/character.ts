@@ -39,7 +39,7 @@ export class Character implements Entity {
         this.keyboard = keyboard;
         this.image = new Image();
         
-        if (imageData){
+        if (imageData) {
             this.image.src = URL.createObjectURL(new Blob([new Uint8Array(imageData)]));
         } else {
             this.image.src = ImageBank.getImageUrl(imageName);

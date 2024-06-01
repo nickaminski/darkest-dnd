@@ -94,8 +94,7 @@ io.on('connection', (socket) => {
         if (clickData.path.length == 0) return;
 
         // clickData needs ids so players can control different character
-        let target = userConnections.flatMap(x => x.controlableCharacters).find(x => x.id == clickData.id);
-
+        let target = user.controlableCharacters.find(x => x.id == clickData.id);
         if (!target) return;
 
         target.tileRow = clickData.path[0].tileRow;
@@ -106,7 +105,7 @@ io.on('connection', (socket) => {
 
     socket.on('stopped', (clickData) => {
         // clickData needs ids so players can control different character
-        let target: { id: string, tileRow: number, tileCol: number } = userConnections.flatMap(x => x.controlableCharacters).find(x => x.id == clickData.id);
+        let target: { id: string, tileRow: number, tileCol: number } = user.controlableCharacters.find(x => x.id == clickData.id);
 
         target.tileRow = clickData.tileRow;
         target.tileCol = clickData.tileCol;
@@ -119,27 +118,31 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('admin-paint', paintData);
     });
 
-    socket.on('admin-spawn', (spawnData) => {
+    socket.on('spawn-minion', (spawnData) => {
+        if (!user.admin && user.controlableCharacters.length >= 2) return;
+
         let spawn = { 
             id: crypto.randomUUID(),
             playerId: spawnData.playerId,
             imageName: spawnData.imageName,
-            tileRow: spawnData.tileRow, 
-            tileCol: spawnData.tileCol,
-            shareVision: false 
+            tileRow: user.admin ? spawnData.tileRow : user.controlableCharacters[0].tileRow, 
+            tileCol: user.admin ? spawnData.tileCol : user.controlableCharacters[0].tileCol,
+            shareVision: !user.admin 
         };
-        userConnections.find(x => x.id == spawnData.playerId).controlableCharacters.push(spawn);
+        user.controlableCharacters.push(spawn);
 
         // send to all because the spawning client needs the generated id
         io.sockets.emit('initialize-characters', [spawn]);
     });
 
     socket.on('despawn-character', (idData) => {
-        let idx = userConnections.find(x => x.id == idData.playerId).controlableCharacters.findIndex(x => x.id == idData.characterId);
+        let idx = user.controlableCharacters.findIndex(x => x.id == idData.characterId);
+        if (!user.admin && user.controlableCharacters.length == 1) return;
+
         if (idx != -1)
         {
-            userConnections.find(x => x.id == idData.playerId).controlableCharacters.splice(idx, 1);
-            socket.broadcast.emit('despawn-character', idData.characterId);
+            user.controlableCharacters.splice(idx, 1);
+            io.sockets.emit('despawn-character', idData.characterId);
         }
     });
 

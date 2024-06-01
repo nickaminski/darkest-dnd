@@ -138,9 +138,10 @@ export class Game {
         {
             npcs[idx].pov = true;
             this.level.currentPovCharacter = npcs[idx];
-            if (!this.admin) {
-                this.setCharacterPortraitButtonImage(this.level.currentPovCharacter.image.src);
-            }
+            this.setCharacterPortraitButtonImage(this.level.currentPovCharacter.image.src);
+        } else if (this.admin) {
+            npcs.forEach(x => x.pov = false);
+            this.level.currentPovCharacter = null;
         }
         this.level.recalculateMousePath = true;
         this.level.needsRedraw = true;
@@ -151,6 +152,18 @@ export class Game {
         {
             this.keyboard.didCycle = true;
             this.cyclePov();
+        }
+        if (this.keyboard.removeCharacter && !this.keyboard.didCycle)
+        {
+            this.keyboard.didCycle = true;
+            if (this.admin || this.level.getPlayerCharacters(this.playerId).length > 0) {
+                this.removePovCharacter();
+            }
+        }
+        if (this.keyboard.placeNpc && !this.keyboard.didCycle)
+        {
+            this.keyboard.didCycle = true;
+            this.placeMinion();
         }
     }
 
@@ -185,20 +198,19 @@ export class Game {
         }
     }
 
-    adminRemoveCharacter(): void {
+    removePovCharacter(): void {
         if (this.level.currentPovCharacter)
         {
             this.socket.emit('despawn-character', {playerId: this.playerId, characterId: this.level.currentPovCharacter.id});
-            this.level.removeEntityById(this.level.currentPovCharacter.id);
-            this.level.currentPovCharacter = null;
-            this.level.needsRedraw = true;
-            this.level.recalculateMousePath = true;
         }
     }
 
-    adminPlaceNpc(): void {
-        let spawnData = { playerId: this.playerId, tileRow: this.mouse.tileRow, tileCol: this.mouse.tileCol, imageName: this.adminSpawnableNpcs[this.adminCurrentNpcSpawnIdx]};
-        this.socket.emit('admin-spawn', spawnData);
+    placeMinion(): void {
+        let spawnData = { playerId: this.playerId, tileRow: this.mouse.tileRow, tileCol: this.mouse.tileCol, imageName: '' };
+        if (this.admin) {
+            spawnData.imageName = this.adminSpawnableNpcs[this.adminCurrentNpcSpawnIdx];
+        }
+        this.socket.emit('spawn-minion', spawnData);
     }
 
     adminFreezeCharacterMovement(): void {
@@ -281,9 +293,21 @@ export class Game {
         });
 
         this.socket.on('despawn-character', (id) => {
-            this.level.removeEntityById(id);
+            let char = this.level.removeCharacterById(id);
             this.level.needsRedraw = true;
             this.level.recalculateVision = true;
+
+            if (char.playerId == this.playerId) {
+                // if our own character was removed, cycle pov to another of our available characters
+                let myCharacters = this.level.getPlayerCharacters(this.playerId);
+                if (myCharacters.length > 0) {
+                    this.level.currentPovCharacter = myCharacters[0];
+                    myCharacters[0].pov = true;
+                    this.setCharacterPortraitButtonImage(myCharacters[0].image.src);
+                } else {
+                    this.level.currentPovCharacter = null;
+                }
+            }
         });
 
         this.socket.on('receive-game-state', (gameState) => {
@@ -345,22 +369,10 @@ export class Game {
             this.adminPlaceColor();
         }
 
-        if (this.keyboard.removeCharacter && !this.keyboard.didCycle)
-        {
-            this.keyboard.didCycle = true;
-            this.adminRemoveCharacter();
-        }
-
         if (this.keyboard.cycleNpc && !this.keyboard.didCycle)
         {
             this.keyboard.didCycle = true;
             this.adminCycleNpcs();
-        }
-
-        if (this.keyboard.placeNpc && !this.keyboard.didCycle)
-        {
-            this.keyboard.didCycle = true;
-            this.adminPlaceNpc();
         }
 
         if (this.keyboard.freezeCharacterMovement && !this.keyboard.didCycle)
