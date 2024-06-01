@@ -4,7 +4,6 @@ import { Level } from './level/level';
 import { Keyboard } from './input/keyboard';
 import { Camera } from './entity/camera';
 import { Character } from './entity/character';
-import levelImage from '../assets/maps/weald.png';
 
 import { Socket } from 'socket.io-client';
 import { PaintColor } from './graphics/paintColor';
@@ -20,7 +19,7 @@ export class Game {
     keyboard: Keyboard;
     mouse: Mouse;
     camera: Camera;
-
+    playerBtnSrc: string;
     playerId: string;
 
     admin: boolean = false;
@@ -86,7 +85,7 @@ export class Game {
         this.keyboard = new Keyboard();
         this.camera = new Camera(this.keyboard, this.drawCtx);
         this.mouse = new Mouse(this.keyboard);
-        this.level = new Level(levelImage, this.mouse, socket);
+        this.level = new Level(this.mouse, socket);
         this.socket = socket;
 
         document.addEventListener('mousemove', (e) => this.mouse.onMouseMove(e, this.level, this.drawCtx, this.camera));
@@ -208,24 +207,44 @@ export class Game {
         this.socket.emit('admin-freeze-all');
     }
 
+    loadPlayerData(playerData: any) {
+        this.playerId = playerData.id;
+        this.admin = playerData.admin;
+        this.level.admin = playerData.admin;
+        this.level.DEBUG_USE_BRIGHTNESS = !playerData.admin;
+
+        let characters = this.level.getPlayerCharacters(this.playerId);
+
+        if (characters && characters.length > 0) {
+            // race condition for characters loading before player gets their id
+            characters[0].pov = true;
+            this.level.currentPovCharacter = characters[0];
+            this.camera.goToCharacter(characters[0]);
+            
+            if (!this.admin) {
+                this.setCharacterPortraitButtonImage(characters[0].image.src);
+            }
+        }
+        
+        if (playerData.admin) {
+            this.createAdminControls();
+        } else {
+            this.createUserControls();
+        }
+    }
+
+    loadMapData(playerData: any, mapData: any, gameState: any) {
+        this.level.loadMapData(playerData.id, mapData.buffer, gameState);
+    }
+
+    receiveGameState(gameState: any) {
+        this.level.loadGameState(this.playerId, gameState);
+    }
+
     registerSocketListeningEvents(): void {
-        this.socket.on('connect', () => {
-            if (this.level.loaded) {
-                this.socket.emit('create-game-state', { rows: this.level.height, cols: this.level.width });
-            }
-        });
-
-        this.socket.on('assign-player-data', (data) => {
-            this.playerId = data.id;
-            this.admin = data.admin;
-            this.level.admin = data.admin;
-            this.level.DEBUG_USE_BRIGHTNESS = !data.admin;
-
-            if (data.admin) {
-                this.createAdminControls();
-            } else {
-                this.createUserControls();
-            }
+        this.socket.on('initialize-game-state', (data) => {
+            this.loadPlayerData(data.playerData);
+            this.loadMapData(data.playerData, data.mapData, data.gameState);
         });
 
         this.socket.on('initialize-characters', (characterList: any) => {
@@ -270,7 +289,7 @@ export class Game {
         this.socket.on('receive-game-state', (gameState) => {
             if (gameState.freezeCharacterMovement)
             {
-                this.receiveFreeze();
+                this.level.receiveFreeze(this.playerId);
             }
             if (this.level.loaded)
             {
@@ -298,19 +317,8 @@ export class Game {
         });
 
         this.socket.on('freeze', () => {
-            this.receiveFreeze();
+            this.level.receiveFreeze(this.playerId);
         });
-    }
-
-    receiveFreeze(): void {
-        this.level.canCharactersMove = !this.level.canCharactersMove;
-        this.level.drawFreezeVignette = !this.level.drawFreezeVignette;
-
-        for(let c of this.level.getPlayerCharacters(this.playerId)) {
-            c.freeze();
-        }
-        
-        this.level.foregroundNeedsRedraw = true;
     }
 
     handleAminControls(): void {
@@ -377,13 +385,15 @@ export class Game {
         this.level.addEntity(character);
         if (pov) {
             this.level.currentPovCharacter = character;
-            this.camera.setCameraPosition((-character.pixelx + window.innerWidth / 2) * this.drawCtx.scale, (-character.pixely + window.innerHeight / 2) * this.drawCtx.scale);
+            this.camera.goToCharacter(character);
             
             if (!this.admin) {
                 this.setCharacterPortraitButtonImage(character.image.src);
             }
         }
     }
+
+
 
     createAdminControls(): void {
         let uiContainer = document.getElementById('ui-controls');
@@ -400,7 +410,12 @@ export class Game {
     }
 
     setCharacterPortraitButtonImage(src: string) {
-        (document.getElementById('btn-current-portrait') as HTMLImageElement).src = src;
+        // another race condition workaround where the button may not exist when the first src comes in
+        this.playerBtnSrc = src;
+        let button = (document.getElementById('btn-current-portrait') as HTMLImageElement);
+        if (button) {
+            button.src = src;
+        }
     }
 
     createAdminNpcButton(): HTMLImageElement {
@@ -461,6 +476,7 @@ export class Game {
         let portraitButton = document.createElement('img');
         portraitButton.id = 'btn-current-portrait';
         portraitButton.role = 'button';
+        portraitButton.src = this.playerBtnSrc;
         portraitButton.style.position = 'fixed';
         portraitButton.style.width = '52px';
         portraitButton.style.height = '52px';

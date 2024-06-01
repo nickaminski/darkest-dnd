@@ -48,10 +48,6 @@ export class Character implements Entity {
         this.pov = pov;
         this.shareVision = shareVision;
         this.socket = socket;
-
-        this.image.onload = () => {
-            this.level.needsRedraw = true;
-        }
     }
 
     update(delta: number) {
@@ -127,6 +123,9 @@ export class Character implements Entity {
 
     init(level: Level) {
         this.level = level;
+        this.image.onload = () => {
+            this.level.needsRedraw = true;
+        }
     }
 
     stopPathMovement(): void {

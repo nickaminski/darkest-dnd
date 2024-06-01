@@ -1,13 +1,14 @@
 import { DrawContext } from "../graphics/drawContext";
 import { Keyboard } from "../input/keyboard";
 import { Level } from "../level/level";
+import { Character } from "./character";
 
 export class Camera {
     #x: number;
     #y: number;
     speed: number;
     input: Keyboard;
-    screen: DrawContext;
+    drawCtx: DrawContext;
 
     public get x() {
         return this.#x;
@@ -17,9 +18,9 @@ export class Camera {
         return this.#y;
     }
 
-    constructor(input: Keyboard, screen: DrawContext) {
+    constructor(input: Keyboard, drawCtx: DrawContext) {
         this.input = input;
-        this.screen = screen;
+        this.drawCtx = drawCtx;
         this.speed = 0.5;
         this.#x = 0;
         this.#y = 0;
@@ -30,22 +31,22 @@ export class Camera {
         let dy = 0;
 
         if (this.input.moveUp) {
-            dy += this.speed * delta * this.screen.scale;
+            dy += this.speed * delta * this.drawCtx.scale;
         }
         if (this.input.moveDown) {
-            dy -= this.speed * delta * this.screen.scale;
+            dy -= this.speed * delta * this.drawCtx.scale;
         }
         if (this.input.moveLeft) {
-            dx += this.speed * delta * this.screen.scale;
+            dx += this.speed * delta * this.drawCtx.scale;
         }
         if (this.input.moveRight) {
-            dx -= this.speed * delta * this.screen.scale;
+            dx -= this.speed * delta * this.drawCtx.scale;
         }
 
         if (dx != 0 || dy != 0) {
             this.#x += dx;
             this.#y += dy;
-            this.screen.updateTransform(this.#x, this.#y);
+            this.drawCtx.updateTransform(this.#x, this.#y);
             level.needsRedraw = true;
         }
     }
@@ -53,6 +54,10 @@ export class Camera {
     setCameraPosition(x: number, y: number) {
         this.#x = x;
         this.#y = y;
-        this.screen.updateTransform(this.#x, this.#y);
+        this.drawCtx.updateTransform(this.#x, this.#y);
+    }
+
+    goToCharacter(character: Character) {
+        this.setCameraPosition((-character.pixelx + window.innerWidth / 2) * this.drawCtx.scale, (-character.pixely + window.innerHeight / 2) * this.drawCtx.scale);
     }
 }

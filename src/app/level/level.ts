@@ -26,22 +26,38 @@ export class Level {
 
     DEBUG_USE_BRIGHTNESS = true;
     DEBUG_SHOW_TILE_LOC = false;
+    mapImage = new Image();
 
-    constructor(imageRef: any, mouse: Mouse, socket: Socket) {
+    constructor(mouse: Mouse, socket: Socket) {
         this.foregroundNeedsRedraw = true;
         this.pixelHexValues = [];
         this.entities = [];
         this.tileMap = [];
         this.mouse = mouse;
-        var loadedImage = new Image();
-        loadedImage.src = imageRef;
-        loadedImage.onload = () => {
-            this.width = loadedImage.width;
-            this.height = loadedImage.height;
+
+        this.mouse.$mouseClick.subscribe(e=> {
+            if(this.currentPovCharacter &&
+                this.canCharactersMove && 
+                this.mouse.mousePath && 
+                this.mouse.mousePath.length > 0) 
+                {
+                   var thePath = [...this.mouse.mousePath];
+                   this.currentPovCharacter.currentMovePath = thePath;
+       
+                   socket.emit('click', {id: this.currentPovCharacter.id, path: thePath });
+            }
+        });
+    }
+
+    loadMapData(playerId: string, mapData: ArrayBuffer, gameState: any) {
+        this.mapImage.src = URL.createObjectURL(new Blob([new Uint8Array(mapData)], { type: 'application/octet-stream' }));
+        this.mapImage.onload = () => {
+            this.width = this.mapImage.width;
+            this.height = this.mapImage.height;
 
             var virtualCanvas = document.createElement('canvas');
             var context = virtualCanvas.getContext('2d');
-            context.drawImage(loadedImage, 0, 0);
+            context.drawImage(this.mapImage, 0, 0);
             var pixelData = context.getImageData(0, 0, this.width, this.height).data;
             for(var i = 0; i < pixelData.length / 4; i++) {
                 var r = pixelData[i*4].toString(16).padStart(2, '0');
@@ -71,24 +87,10 @@ export class Level {
                 }
             });
 
-            if (socket.connected)
-            {
-                socket.emit('create-game-state', { rows: this.height, cols: this.width });
-            }
+            this.loadGameState(playerId, gameState);
+            
+            this.recalculateVision = true;
         }
-
-        this.mouse.$mouseClick.subscribe(e=> {
-            if(this.currentPovCharacter &&
-                this.canCharactersMove && 
-                this.mouse.mousePath && 
-                this.mouse.mousePath.length > 0) 
-                {
-                   var thePath = [...this.mouse.mousePath];
-                   this.currentPovCharacter.currentMovePath = thePath;
-       
-                   socket.emit('click', {id: this.currentPovCharacter.id, path: thePath });
-            }
-        });
     }
 
     addEntity(e: Entity) {
@@ -186,6 +188,36 @@ export class Level {
             drawContext.ctx.restore();
         }
         this.needsRedraw = false;
+    }
+
+    loadGameState(playerId: string, gameState: any) {
+        if (gameState.freezeCharacterMovement)
+        {
+            this.receiveFreeze(playerId);
+        }
+        if (this.loaded)
+        {
+            for(let r = 0; r < this.height; r++) {
+                for(let c = 0; c < this.width; c++) {
+                    let serverTile = gameState.tiles[r][c];
+                    let localTile = this.getTile(r, c);
+                    this.paintTile(localTile, serverTile.paintOverColorHex);
+                    localTile.explored = serverTile.explored;
+                }
+            }
+            this.recalculateVision = true;
+        }
+    }
+
+    receiveFreeze(playerId: string): void {
+        this.canCharactersMove = !this.canCharactersMove;
+        this.drawFreezeVignette = !this.drawFreezeVignette;
+
+        for(let c of this.getPlayerCharacters(playerId)) {
+            c.freeze();
+        }
+        
+        this.foregroundNeedsRedraw = true;
     }
 
     renderForeground(drawContext: DrawContext) {
