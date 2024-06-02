@@ -105,17 +105,22 @@ export class Mouse {
     }
 
     public onMouseDown(e: MouseEvent) {
+        if ((e.target as HTMLElement).id != 'foreground') return;
+
         this.mouseDown = true;
         this.lastDragPos = { x: e.clientX, y: e.clientY };
     }
 
     public onTouchStart(e: TouchEvent) {
+        if ((e.target as HTMLElement).id != 'foreground') return;
+
         this.mouseDown = true;
         this.lastDragPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     }
 
     public onMouseUp(e: MouseEvent) {
         if (!this.mouseDragging) {
+            if ((e.target as HTMLElement).id != 'foreground') return;
             this.mouseClickSubject.next(e);
         }
         this.mouseDown = false;
