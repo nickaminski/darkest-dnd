@@ -59,6 +59,12 @@ export class Mouse {
     }
 
     public onMouseMove(e: MouseEvent, level: Level, drawContext: DrawContext, camera: Camera) {
+        if (this.mouseDown && this.#x != e.clientX && this.#y != e.clientY) {
+            // need x and y check for weird behavior where the first click into an unfocused window 
+            // also fires a mouemove and sets dragging to true 
+            this.mouseDragging = true;
+        }
+
         const oldX = this.tileCol;
         const oldY = this.tileRow;
         this.x = e.clientX;
@@ -70,9 +76,6 @@ export class Mouse {
             level.recalculateMousePath = true;
         }
         
-        if (this.mouseDown) {
-            this.mouseDragging = true;
-        }
         
         if (this.mouseDragging) {
             level.needsRedraw = true;
