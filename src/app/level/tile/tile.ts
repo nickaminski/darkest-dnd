@@ -15,17 +15,23 @@ export class Tile {
     col: number;
     brightness: BrightnessLevel;
     isSolid: boolean;
+    isWindow: boolean;
     explored: boolean;
     paintOverColorHex: string;
+
+    shouldBeDrawn: boolean;
 
     constructor(row: number, col: number, tileHex: string) {
         this.row = row;
         this.col = col;
         this.brightness = BrightnessLevel.Dark;
         this.explored = false;
+        this.isWindow = true;
 
         if (tileHex == '000000ff') {
             this.isSolid = true;
+            this.isWindow = false;
+        } else {
         }
     }
 

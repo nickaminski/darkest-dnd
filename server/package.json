@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "serve": "nodemon src/server.ts",
-    "build": "webpack"
+    "serve": "nodemon src/server.ts"
   },
   "keywords": [],
   "author": "",

@@ -105,7 +105,7 @@ io.on('connection', (socket) => {
 
     socket.on('stopped', (clickData) => {
         // clickData needs ids so players can control different character
-        let target: { id: string, tileRow: number, tileCol: number } = user.controlableCharacters.find(x => x.id == clickData.id);
+        let target = user.controlableCharacters.find(x => x.id == clickData.id);
 
         target.tileRow = clickData.tileRow;
         target.tileCol = clickData.tileCol;

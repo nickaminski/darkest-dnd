@@ -94,6 +94,13 @@ export class Level {
 
                 this.tileMap[row][col] = newTile;
             }
+
+            for (var i = 0; i < this.tileMap.length; i++) {
+                for (var j = 0; j < this.tileMap[0].length; j++) {
+                    this.tileMap[i][j].shouldBeDrawn = this.tileShouldBeDrawn(i, j);
+                }
+            }
+
             this.loaded = true;
             this.needsRedraw = true;
             
@@ -178,7 +185,8 @@ export class Level {
         for (var y = y0; y < y1 + 1; y++) {
             for (var x = x0; x < x1 + 1; x++) {
                 let tile = this.getTile(y, x);
-                drawContext.drawTile(y, x, Tile.TileSize, Tile.TileSize, this.getTileHex(y, x), tile?.paintOverColorHex, this.getBrightness(y, x));
+                if (tile && tile.shouldBeDrawn)
+                    drawContext.drawTile(y, x, Tile.TileSize, Tile.TileSize, this.getTileHex(y, x), tile?.paintOverColorHex, this.getBrightness(y, x));
             }
         }
 
@@ -245,6 +253,20 @@ export class Level {
             drawContext.clear();
         }
         this.foregroundNeedsRedraw = false;
+    }
+
+    tileShouldBeDrawn(row: number, col: number): boolean {
+        var up = this.getTile(row-1,col);
+        var down = this.getTile(row+1, col);
+        var left = this.getTile(row, col-1);
+        var right = this.getTile(row, col+1);
+
+        // only care about drawing tiles that we could possibly see
+        let upShouldBlockUs = up && up.isSolid && !up.isWindow;
+        let downShouldBlockUs = down && down.isSolid && !down.isWindow;
+        let leftShouldBlockUs = left && left.isSolid && !left.isWindow;
+        let rightShouldBlockUs = right && right.isSolid && !right.isWindow;
+        return !(upShouldBlockUs && downShouldBlockUs && leftShouldBlockUs && rightShouldBlockUs);
     }
 
     getTile(row: number, col: number): Tile {
