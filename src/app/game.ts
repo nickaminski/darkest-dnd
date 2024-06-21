@@ -331,22 +331,7 @@ export class Game {
         });
 
         this.socket.on('receive-game-state', (gameState) => {
-            if (gameState.freezeCharacterMovement)
-            {
-                this.level.receiveFreeze(this.playerId);
-            }
-            if (this.level.loaded)
-            {
-                for(let r = 0; r < this.level.height; r++) {
-                    for(let c = 0; c < this.level.width; c++) {
-                        let serverTile = gameState.tiles[r][c];
-                        let localTile = this.level.getTile(r, c);
-                        this.level.paintTile(localTile, serverTile.paintOverColorHex);
-                        localTile.explored = serverTile.explored;
-                    }
-                }
-                this.level.recalculateVision = true;
-            }
+            this.receiveGameState(gameState);
         });
 
         this.socket.on('change-image', (imageData: {characterId: string, file: ArrayBuffer, name: string}) => {

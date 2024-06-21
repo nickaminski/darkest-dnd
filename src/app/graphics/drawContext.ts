@@ -49,7 +49,7 @@ export class DrawContext {
     clearBlack() {
         this.#ctx.save();
         this.#ctx.setTransform(1, 0, 0, 1, 0 ,0);
-        this.#ctx.fillStyle = 'ffffff';
+        this.#ctx.fillStyle = 'black';
         this.#ctx.fillRect(0, 0, this.width, this.height);
         this.#ctx.restore();
     }

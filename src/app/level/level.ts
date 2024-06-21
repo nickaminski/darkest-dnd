@@ -207,10 +207,12 @@ export class Level {
         {
             drawContext.ctx.save();
             drawContext.ctx.resetTransform();
+            drawContext.ctx.fillStyle = 'gray';
+            drawContext.ctx.fillRect(0, 0, 260, 100);
             drawContext.ctx.fillStyle = 'blue';
             drawContext.ctx.font = '30px Arial';
-            drawContext.ctx.fillText(`Tile offset: ${x0}, ${y0}`, 10, 50);
-            drawContext.ctx.fillText(`Hover tile: ${this.mouse.tileCol}, ${this.mouse.tileRow}`, 10, 100);
+            drawContext.ctx.fillText(`Tile offset: ${x0}, ${y0}`, 10, 35);
+            drawContext.ctx.fillText(`Hover tile: ${this.mouse.tileCol}, ${this.mouse.tileRow}`, 10, 80);
             drawContext.ctx.restore();
         }
         this.needsRedraw = false;
