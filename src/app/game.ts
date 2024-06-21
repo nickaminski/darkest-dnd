@@ -8,6 +8,7 @@ import { Character } from './entity/character';
 import { Socket } from 'socket.io-client';
 import { PaintColor } from './graphics/paintColor';
 import { ImageBank } from './graphics/imageBank';
+import { UIFactory } from './input/uiFactory';
 
 export class Game {
     socket: Socket;
@@ -236,10 +237,33 @@ export class Game {
         }
         
         if (playerData.admin) {
-            this.createAdminControls();
+            UIFactory.createAdminControls(this.adminSpawnableNpcs,
+                                          this.adminPaintColors,
+                                          this.updateNpcSpawnIdx,
+                                          this.updateColorIdx);
         } else {
-            this.createUserControls();
+            UIFactory.createUserControls(this.heroPortraitNames,
+                                         this.playerBtnSrc,
+                                         this.userControlsCallback);
         }
+    }
+
+    updateNpcSpawnIdx = (idx: number) => {
+        this.adminCurrentNpcSpawnIdx = idx;
+    }
+
+    updateColorIdx = (idx: number) => {
+        this.adminCurrentColorIdx = idx;
+    }
+
+    userControlsCallback = (src: string, file: File | string) => {
+        this.level.currentPovCharacter.image.src = src;
+        this.setCharacterPortraitButtonImage(src);
+
+        if (file instanceof File)
+            this.socket.emit('change-image', { characterId: this.level.currentPovCharacter.id, file: file});
+        else
+            this.socket.emit('change-image', { characterId: this.level.currentPovCharacter.id, name: file});
     }
 
     loadMapData(playerData: any, mapData: any, gameState: any) {
@@ -401,22 +425,6 @@ export class Game {
         }
     }
 
-
-
-    createAdminControls(): void {
-        let uiContainer = document.getElementById('ui-controls');
-        uiContainer.appendChild(this.createAdminNpcPanel());
-        uiContainer.appendChild(this.createAdminNpcButton());
-        uiContainer.appendChild(this.createAdminColorPanel());
-        uiContainer.appendChild(this.createAdminColorButton());
-    }
-
-    createUserControls(): void {
-        let uiContainer = document.getElementById('ui-controls');
-        uiContainer.appendChild(this.createCharacterPortraitButton());
-        uiContainer.appendChild(this.createCharacterPortraiPanel());
-    }
-
     setCharacterPortraitButtonImage(src: string) {
         // another race condition workaround where the button may not exist when the first src comes in
         this.playerBtnSrc = src;
@@ -424,236 +432,5 @@ export class Game {
         if (button) {
             button.src = src;
         }
-    }
-
-    createAdminNpcButton(): HTMLImageElement {
-        let npcButton = document.createElement('img');
-        npcButton.id = 'admin-npc-toggle';
-        npcButton.role = 'button';
-        npcButton.src = ImageBank.getImageUrl(this.adminSpawnableNpcs[this.adminCurrentColorIdx]);
-        npcButton.style.position = 'fixed';
-        npcButton.style.width = '52px';
-        npcButton.style.height = '52px';
-        npcButton.style.bottom = '16px';
-        npcButton.style.left = '16px';
-        npcButton.style.backgroundColor = 'lightgrey';
-        npcButton.style.cursor = 'pointer';
-        npcButton.style.userSelect = 'none';
-        npcButton.addEventListener('click', e => {
-            let npcContainer = document.getElementById('admin-npcs');
-            if (npcContainer.style.height == '0px') {
-                npcContainer.style.height = '312px';
-            } else {
-                npcContainer.style.height = '0px';
-            }
-        });
-        return npcButton;
-    }
-
-    createAdminColorButton(): HTMLDivElement {
-        let background = document.createElement('div');
-        background.style.backgroundColor = 'lightgrey';
-        background.style.position = 'fixed';
-        background.style.bottom = '16px';
-        background.style.left = '80px';
-        background.style.width = '36px';
-        background.style.height = '36px';
-
-        let colorButton = document.createElement('img');
-        colorButton.id = 'admin-color-toggle';
-        colorButton.role = 'button';
-        colorButton.src = ImageBank.getImageUrl('palette');
-        colorButton.style.width = '36px';
-        colorButton.style.height = '36px';
-        colorButton.style.backgroundColor = 'lightgrey';
-        colorButton.style.cursor = 'pointer';
-        colorButton.style.userSelect = 'none';
-        colorButton.addEventListener('click', e => {
-            let colorContainer = document.getElementById('admin-colors');
-            if (colorContainer.style.height == '0px') {
-                colorContainer.style.height = '288px';
-            } else {
-                colorContainer.style.height = '0px';
-            }
-        });
-        background.appendChild(colorButton);
-        return background;
-    }
-
-    createCharacterPortraitButton(): HTMLImageElement {
-        let portraitButton = document.createElement('img');
-        portraitButton.id = 'btn-current-portrait';
-        portraitButton.role = 'button';
-        portraitButton.src = this.playerBtnSrc;
-        portraitButton.style.position = 'fixed';
-        portraitButton.style.width = '52px';
-        portraitButton.style.height = '52px';
-        portraitButton.style.bottom = '16px';
-        portraitButton.style.left = '16px';
-        portraitButton.style.backgroundColor = 'lightgrey';
-        portraitButton.style.cursor = 'pointer';
-        portraitButton.style.userSelect = 'none';
-
-        portraitButton.addEventListener('click', e => {
-            let portraitContainer = document.getElementById('hero-portraits');
-            if (portraitContainer.style.height == '0px') {
-                portraitContainer.style.height = '208px';
-            } else {
-                portraitContainer.style.height = '0px';
-            }
-        });
-
-        return portraitButton;
-    }
-
-    createAdminNpcPanel(): HTMLDivElement {
-        let npcContainer = document.createElement('div');
-        npcContainer.id = 'admin-npcs';
-        npcContainer.style.position = 'fixed';
-        npcContainer.style.display = 'flex';
-        npcContainer.style.flexFlow = 'column';
-        npcContainer.style.bottom = '74px';
-        npcContainer.style.left = '16px';
-        npcContainer.style.backgroundColor = 'lightgrey';
-        npcContainer.style.overflow = 'hidden';
-        npcContainer.style.height = '0px';
-        npcContainer.style.transition = '.2s';
-        
-        for (let c = 0; c < this.adminSpawnableNpcs.length; c++) {
-            let npc = this.adminSpawnableNpcs[c];
-            let button = document.createElement('img');
-            button.id = `btn-adminNpc-${npc}`;
-            button.role = 'button';
-            button.src = ImageBank.getImageUrl(npc);
-            button.title = npc;
-            button.style.border = 'solid 3px';
-            button.style.width = '48px';
-            button.style.height = '48px'; 
-            button.style.margin = '2px';
-            button.style.borderRadius = '50%';
-            button.style.cursor = 'pointer';
-            button.style.userSelect = 'none';
-            button.style.borderColor = c == 0 ?  'green' : 'black';
-
-            button.addEventListener('click', e => { 
-                for (let i = 0; i < this.adminSpawnableNpcs.length; i++) {
-                    document.getElementById(`btn-adminNpc-${this.adminSpawnableNpcs[i]}`).style.borderColor = 'black';
-                }
-                button.style.borderColor = 'green';
-                this.adminCurrentNpcSpawnIdx = c;
-                (document.getElementById('admin-npc-toggle') as HTMLImageElement).src = ImageBank.getImageUrl(npc);
-            });
-            npcContainer.appendChild(button);
-        }
-
-        return npcContainer;
-    }
-
-    createAdminColorPanel(): HTMLDivElement {
-        let colorContainer = document.createElement('div');
-        colorContainer.id = 'admin-colors';
-        colorContainer.style.position = 'fixed';
-        colorContainer.style.display = 'flex';
-        colorContainer.style.bottom = '58px';
-        colorContainer.style.flexFlow = 'column';
-        colorContainer.style.left = '80px';
-        colorContainer.style.backgroundColor = 'lightgrey';
-        colorContainer.style.overflow = 'hidden';
-        colorContainer.style.height = '0px';
-        colorContainer.style.transition = '.2s';
-
-        for (let c = 0; c < this.adminPaintColors.length; c++) {
-            let color = this.adminPaintColors[c];
-            let button = document.createElement('div');
-            button.id = `btn-adminColor-${color.name}`;
-            button.role = 'button';
-            button.style.backgroundColor = `#${color.hex}`;
-            button.style.border = 'solid 3px';
-            button.style.width = '32px';
-            button.style.height = '32px';
-            button.style.userSelect = 'none';
-            button.style.margin = '2px';
-            button.style.cursor = 'pointer';
-            button.style.borderColor = c == 0 ?  'green' : 'black';
-
-            button.addEventListener('click', e => { 
-                for (let i = 0; i < this.adminPaintColors.length; i++) {
-                    document.getElementById(`btn-adminColor-${this.adminPaintColors[i].name}`).style.borderColor = 'black';
-                }
-                button.style.borderColor = 'green';
-                this.adminCurrentColorIdx = c;
-                let hex = this.adminPaintColors[this.adminCurrentColorIdx].hex ?? '00000000';
-                document.getElementById('admin-color-toggle').style.backgroundColor = `#${hex}`;
-            });
-            colorContainer.appendChild(button);
-        }
-        return colorContainer;
-    }
-
-    createCharacterPortraiPanel(): HTMLDivElement {
-        let portrait = document.createElement('div');
-        portrait.id = 'hero-portraits';
-        portrait.style.position = 'fixed';
-        portrait.style.display = 'flex';
-        portrait.style.flexFlow = 'row';
-        portrait.style.flexWrap = 'wrap';
-        portrait.style.bottom = '72px';
-        portrait.style.left = '16px';
-        portrait.style.backgroundColor = 'lightgrey';
-        portrait.style.overflow = 'hidden';
-        portrait.style.height = '0px';
-        portrait.style.width = '260px';
-        portrait.style.transition = '.2s';
-
-        for (let i = 0; i < this.heroPortraitNames.length; i++) {
-            let button = document.createElement('img');
-            button.id = `btn-portrait-${this.heroPortraitNames[i]}`;
-            button.src = ImageBank.getImageUrl(this.heroPortraitNames[i]);
-            button.role = 'button';
-            button.style.border = 'solid 3px';
-            button.style.width = '48px';
-            button.style.height = '48px';
-            button.style.userSelect = 'none';
-            button.style.margin = '2px';
-            button.style.cursor = 'pointer';
-
-            button.addEventListener('click', e => {
-                (document.getElementById('custom-image') as HTMLInputElement).value = null;
-                let src = ImageBank.getImageUrl(this.heroPortraitNames[i]);
-                this.level.currentPovCharacter.image.src = src;
-                this.setCharacterPortraitButtonImage(src);
-                this.socket.emit('change-image', { characterId: this.level.currentPovCharacter.id, name: this.heroPortraitNames[i]});
-            });
-            portrait.appendChild(button);
-        }
-
-        let button = document.createElement('label');
-        button.id = `btn-portrait-custom`;
-        button.role = 'button';
-        button.style.border = 'solid 3px';
-        button.style.width = '48px';
-        button.style.height = '48px';
-        button.style.userSelect = 'none';
-        button.style.margin = '2px';
-        button.style.cursor = 'pointer';
-        button.style.backgroundColor = 'green';
-
-        let input = document.createElement('input');
-        input.id = 'custom-image';
-        input.setAttribute('type', 'file');
-        input.style.display = 'none';
-        input.addEventListener('change', e => {
-            if (input.files && input.files[0]) {
-                let src = URL.createObjectURL(input.files[0]);
-                this.level.currentPovCharacter.image.src = src;
-                this.setCharacterPortraitButtonImage(src);
-                this.socket.emit('change-image', { characterId: this.level.currentPovCharacter.id, file: input.files[0]});
-            }
-        });
-        button.appendChild(input);
-
-        portrait.appendChild(button);
-
-        return portrait;
     }
 }
