@@ -10,7 +10,7 @@ export class UIFactory {
         uiContainer.appendChild(this.createAdminColorButton());
     }
 
-    static createUserControls(heroPortraitNames: string[], playerBtnSrc: string, portraitCallback: (src: string, file: File | string)=>void): void {
+    static createUserControls(heroPortraitNames: string[], playerBtnSrc: string, portraitCallback: (src: string, file: File | string, fileType: string)=>void): void {
         let uiContainer = document.getElementById('ui-controls');
         uiContainer.appendChild(this.createCharacterPortraitButton(playerBtnSrc));
         uiContainer.appendChild(this.createCharacterPortraiPanel(heroPortraitNames, portraitCallback));
@@ -180,7 +180,7 @@ export class UIFactory {
         return colorContainer;
     }
 
-    private static createCharacterPortraiPanel(heroPortraitNames: string[], portraitCallback: (src: string, file: File | string) => void): HTMLDivElement {
+    private static createCharacterPortraiPanel(heroPortraitNames: string[], portraitCallback: (src: string, file: File | string, fileType: string) => void): HTMLDivElement {
         let portrait = document.createElement('div');
         portrait.id = 'hero-portraits';
         portrait.style.position = 'fixed';
@@ -210,7 +210,7 @@ export class UIFactory {
             button.addEventListener('click', e => {
                 (document.getElementById('custom-image') as HTMLInputElement).value = null;
                 let src = ImageBank.getImageUrl(heroPortraitNames[i]);
-                portraitCallback(src, heroPortraitNames[i]);
+                portraitCallback(src, heroPortraitNames[i], 'image/png');
             });
             portrait.appendChild(button);
         }
@@ -229,11 +229,17 @@ export class UIFactory {
         let input = document.createElement('input');
         input.id = 'custom-image';
         input.setAttribute('type', 'file');
+        input.setAttribute('accept', 'image/*');
         input.style.display = 'none';
         input.addEventListener('change', e => {
             if (input.files && input.files[0]) {
+                if (!input.files[0].type.match(/image\/\w*/)) {
+                    input.value = null;
+                    alert('Invalid format');
+                    return;
+                }
                 let src = URL.createObjectURL(input.files[0]);
-                portraitCallback(src, input.files[0]);
+                portraitCallback(src, input.files[0], input.files[0].type);
             }
         });
         button.appendChild(input);

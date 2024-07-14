@@ -155,6 +155,11 @@ io.on('connection', (socket) => {
 
     socket.on('change-image', (imageData) => {
         if (imageData) {
+            if (!imageData.fileType.match(/image\/\w*/)) {
+                console.log(`change-image invalid image: ${imageData.fileType}`);
+                return;
+            }
+
             let character = user.controlableCharacters.find(x => x.id == imageData.characterId);
             character.imageName = imageData.name;
             character.imageFile = imageData.file;

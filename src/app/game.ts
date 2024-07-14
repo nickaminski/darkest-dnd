@@ -256,22 +256,18 @@ export class Game {
         this.adminCurrentColorIdx = idx;
     }
 
-    userControlsCallback = (src: string, file: File | string) => {
+    userControlsCallback = (src: string, file: File | string, fileType: string) => {
         this.level.currentPovCharacter.image.src = src;
         this.setCharacterPortraitButtonImage(src);
 
         if (file instanceof File)
-            this.socket.emit('change-image', { characterId: this.level.currentPovCharacter.id, file: file});
+            this.socket.emit('change-image', { characterId: this.level.currentPovCharacter.id, file: file, fileType: fileType });
         else
-            this.socket.emit('change-image', { characterId: this.level.currentPovCharacter.id, name: file});
+            this.socket.emit('change-image', { characterId: this.level.currentPovCharacter.id, name: file, fileType: fileType });
     }
 
     loadMapData(playerData: any, mapData: any, gameState: any) {
         this.level.loadMapData(playerData.id, mapData.buffer, gameState);
-    }
-
-    receiveGameState(gameState: any) {
-        this.level.loadGameState(this.playerId, gameState);
     }
 
     registerSocketListeningEvents(): void {
@@ -328,10 +324,6 @@ export class Game {
                     this.level.currentPovCharacter = null;
                 }
             }
-        });
-
-        this.socket.on('receive-game-state', (gameState) => {
-            this.receiveGameState(gameState);
         });
 
         this.socket.on('change-image', (imageData: {characterId: string, file: ArrayBuffer, name: string}) => {
