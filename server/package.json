@@ -11,11 +11,11 @@
   "license": "ISC",
   "devDependencies": {
     "bufferutil": "^4.0.8",
-    "nodemon": "^3.1.4",
+    "nodemon": "^3.1.7",
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.2",
-    "utf-8-validate": "^6.0.4"
+    "typescript": "^5.6.3",
+    "utf-8-validate": "^6.0.5"
   },
   "dependencies": {
     "image-size": "^1.1.1",
