@@ -16,8 +16,12 @@ module.exports = {
         filename: 'bundle.js',
         path: PATH.resolve(__dirname, 'dist'),
         assetModuleFilename: 'images/[hash][ext][query]',
-        clean: true
+        clean: true,
+        publicPath: '/' // important for routing to work correctly
     },
     plugins: [new HtmlWebpackPlugin({ template: './src/index.html' })],
-    devServer: { static: './dist' }
+    devServer: { 
+        static: PATH.resolve(__dirname, 'dist'),
+        historyApiFallback: true,  // serve the index.hmtl when 404
+    }
 }

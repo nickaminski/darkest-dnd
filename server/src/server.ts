@@ -15,7 +15,7 @@ let userConnections: UserConnection[] = [];
 
 var os = require('os');
 var networkInterfaces = os.networkInterfaces();
-const networkIpAddress = networkInterfaces['Wi-Fi 4'].find((x: any) => x.family == 'IPv4').address;
+const networkIpAddress = networkInterfaces['Wi-Fi'].find((x: any) => x.family == 'IPv4').address;
 let characterIdx = 0;
 
 let currentConfig = MapConfig.load(MapConfig.wealdLv2);
