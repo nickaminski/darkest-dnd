@@ -25,33 +25,35 @@ export class Game {
 
     admin: boolean = false;
     adminCurrentColorIdx: number = 0;
-    adminPaintColors = [ PaintColor.Clear, 
-                         PaintColor.Black, 
-                         PaintColor.Trap, 
-                         PaintColor.Curio, 
-                         PaintColor.Red, 
-                         PaintColor.Yellow,
-                         PaintColor.Brown,
-                         PaintColor.FakeWall
-                        ];
+    adminPaintColors = [
+        PaintColor.Clear,
+        PaintColor.Black,
+        PaintColor.Trap,
+        PaintColor.Curio,
+        PaintColor.Red,
+        PaintColor.Yellow,
+        PaintColor.Brown,
+        PaintColor.FakeWall
+    ];
 
-    heroPortraitNames = ['abomination',
-                         'antiquarian',
-                         'arbalist',
-                         'bounty_hunter',
-                         'crusader',
-                         'grave_robber',
-                         'hellion',
-                         'highwayman',
-                         'houndmaster',
-                         'jester',
-                         'leper',
-                         'man_at_arms',
-                         'musketeer',
-                         'occultist',
-                         'plague_doctor',
-                         'vestal'
-                        ];
+    heroPortraitNames = [
+        'abomination',
+        'antiquarian',
+        'arbalist',
+        'bounty_hunter',
+        'crusader',
+        'grave_robber',
+        'hellion',
+        'highwayman',
+        'houndmaster',
+        'jester',
+        'leper',
+        'man_at_arms',
+        'musketeer',
+        'occultist',
+        'plague_doctor',
+        'vestal'
+    ];
 
     adminCurrentNpcSpawnIdx: number = 0;
     adminSpawnableNpcs = [
@@ -109,19 +111,16 @@ export class Game {
 
         this.handlePlayerControls();
 
-        if (this.admin)
-        {
+        if (this.admin) {
             this.handleAminControls();
         }
     }
 
     render(): void {
-        if (this.level.needsRedraw)
-        {
+        if (this.level.needsRedraw) {
             this.level.render(this.drawCtx);
         }
-        if (this.level.foregroundNeedsRedraw)
-        {
+        if (this.level.foregroundNeedsRedraw) {
             this.level.renderForeground(this.foregroundCtx);
         }
     }
@@ -135,8 +134,7 @@ export class Game {
         if (npcs.length == 0) return;
 
         let idx = npcs.findIndex(x => x.tileCol == this.mouse.tileCol && x.tileRow == this.mouse.tileRow);
-        if (idx != -1)
-        {
+        if (idx != -1) {
             this.level.currentPovCharacter = npcs[idx];
             this.setCharacterPortraitButtonImage(this.level.currentPovCharacter.image.src);
         } else if (this.admin) {
@@ -147,20 +145,17 @@ export class Game {
     }
 
     handlePlayerControls() {
-        if (this.keyboard.cyclePov && !this.keyboard.didCycle)
-        {
+        if (this.keyboard.cyclePov && !this.keyboard.didCycle) {
             this.keyboard.didCycle = true;
             this.cyclePov();
         }
-        if (this.keyboard.removeCharacter && !this.keyboard.didCycle)
-        {
+        if (this.keyboard.removeCharacter && !this.keyboard.didCycle) {
             this.keyboard.didCycle = true;
             if (this.admin || this.level.getPlayerCharacters(this.playerId).length > 0) {
                 this.removePovCharacter();
             }
         }
-        if (this.keyboard.placeNpc && !this.keyboard.didCycle)
-        {
+        if (this.keyboard.placeNpc && !this.keyboard.didCycle) {
             this.keyboard.didCycle = true;
             this.placeMinion();
         }
@@ -189,8 +184,7 @@ export class Game {
 
     adminPlaceColor(): void {
         let tile = this.level.getTile(this.mouse.tileRow, this.mouse.tileCol);
-        if (tile)
-        {
+        if (tile) {
             this.level.paintTile(tile, this.adminPaintColors[this.adminCurrentColorIdx].hex);
             this.level.needsRedraw = true;
             this.socket.emit('admin-paint', { row: this.mouse.tileRow, col: this.mouse.tileCol, colorHex: this.adminPaintColors[this.adminCurrentColorIdx].hex });
@@ -198,9 +192,8 @@ export class Game {
     }
 
     removePovCharacter(): void {
-        if (this.level.currentPovCharacter)
-        {
-            this.socket.emit('despawn-character', {playerId: this.playerId, characterId: this.level.currentPovCharacter.id});
+        if (this.level.currentPovCharacter) {
+            this.socket.emit('despawn-character', { playerId: this.playerId, characterId: this.level.currentPovCharacter.id });
         }
     }
 
@@ -230,21 +223,21 @@ export class Game {
             // race condition for characters loading before player gets their id
             this.level.currentPovCharacter = characters[0];
             this.camera.goToCharacter(characters[0]);
-            
+
             if (!this.admin) {
                 this.setCharacterPortraitButtonImage(characters[0].image.src);
             }
         }
-        
+
         if (playerData.admin) {
             UIFactory.createAdminControls(this.adminSpawnableNpcs,
-                                          this.adminPaintColors,
-                                          this.updateNpcSpawnIdx,
-                                          this.updateColorIdx);
+                this.adminPaintColors,
+                this.updateNpcSpawnIdx,
+                this.updateColorIdx);
         } else {
             UIFactory.createUserControls(this.heroPortraitNames,
-                                         this.playerBtnSrc,
-                                         this.userControlsCallback);
+                this.playerBtnSrc,
+                this.userControlsCallback);
         }
     }
 
@@ -267,7 +260,7 @@ export class Game {
     }
 
     loadMapData(playerData: any, mapData: any, gameState: any) {
-        this.level.loadMapData(playerData.id, mapData.buffer, gameState);
+        this.level.loadMapData(playerData.id, mapData, gameState);
     }
 
     registerSocketListeningEvents(): void {
@@ -326,10 +319,10 @@ export class Game {
             }
         });
 
-        this.socket.on('change-image', (imageData: {characterId: string, file: ArrayBuffer, name: string}) => {
+        this.socket.on('change-image', (imageData: { characterId: string, file: ArrayBuffer, name: string }) => {
             let entity = this.level.getCharacter(imageData.characterId);
             if (entity) {
-                if (imageData.file){
+                if (imageData.file) {
                     entity.image.src = URL.createObjectURL(new Blob([new Uint8Array(imageData.file)], { type: 'application/octet-stream' }));
                 }
                 else if (imageData.name)
@@ -343,37 +336,31 @@ export class Game {
     }
 
     handleAminControls(): void {
-        if (this.keyboard.toggleLights && !this.level.DEBUG_USE_BRIGHTNESS)
-        {
+        if (this.keyboard.toggleLights && !this.level.DEBUG_USE_BRIGHTNESS) {
             this.level.DEBUG_USE_BRIGHTNESS = true;
             this.level.needsRedraw = true;
         }
-        else if (!this.keyboard.toggleLights && this.level.DEBUG_USE_BRIGHTNESS)
-        {
+        else if (!this.keyboard.toggleLights && this.level.DEBUG_USE_BRIGHTNESS) {
             this.level.DEBUG_USE_BRIGHTNESS = false;
             this.level.needsRedraw = true;
         }
 
-        if (this.keyboard.cycleColor && !this.keyboard.didCycle)
-        {
+        if (this.keyboard.cycleColor && !this.keyboard.didCycle) {
             this.keyboard.didCycle = true;
             this.adminCycleColor();
         }
 
-        if (this.keyboard.placeColor && !this.keyboard.didCycle)
-        {
+        if (this.keyboard.placeColor && !this.keyboard.didCycle) {
             this.keyboard.didCycle = true;
             this.adminPlaceColor();
         }
 
-        if (this.keyboard.cycleNpc && !this.keyboard.didCycle)
-        {
+        if (this.keyboard.cycleNpc && !this.keyboard.didCycle) {
             this.keyboard.didCycle = true;
             this.adminCycleNpcs();
         }
 
-        if (this.keyboard.freezeCharacterMovement && !this.keyboard.didCycle)
-        {
+        if (this.keyboard.freezeCharacterMovement && !this.keyboard.didCycle) {
             this.keyboard.didCycle = true;
             this.adminFreezeCharacterMovement();
         }
@@ -387,15 +374,15 @@ export class Game {
 
         let pov = !povExistsForPlayer && characterForPlayer;
         var character = new Character(characterData.id, characterData.playerId,
-                                      characterData.tileRow, characterData.tileCol,
-                                      this.keyboard, characterData.imageName,
-                                      characterData.shareVision,
-                                      characterData.imageFile, this.socket);
+            characterData.tileRow, characterData.tileCol,
+            this.keyboard, characterData.imageName,
+            characterData.shareVision,
+            characterData.imageFile, this.socket);
         this.level.addEntity(character);
         if (pov) {
             this.level.currentPovCharacter = character;
             this.camera.goToCharacter(character);
-            
+
             if (!this.admin) {
                 this.setCharacterPortraitButtonImage(character.image.src);
             }

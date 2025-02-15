@@ -1,5 +1,7 @@
 // src/server.ts
+// npx nodemon --exec "npx tsx watch src/server.ts"
 import * as http from 'http';
+import os from "os";
 import { Server } from "socket.io";
 import { UserConnection } from './models/userConnection';
 import { GameState } from './models/gameState';
@@ -13,12 +15,11 @@ const io = new Server(server, {
 
 let userConnections: UserConnection[] = [];
 
-var os = require('os');
 var networkInterfaces = os.networkInterfaces();
 const networkIpAddress = networkInterfaces['Wi-Fi'].find((x: any) => x.family == 'IPv4').address;
 let characterIdx = 0;
 
-let currentConfig = MapConfig.load(MapConfig.wealdLv2);
+let currentConfig = await MapConfig.load(MapConfig.ruinsLv3);
 let currentEnemies = currentConfig.enemies;
 let characterSpawnData = currentConfig.playerSpawns;
 
@@ -40,12 +41,11 @@ io.on('connection', (socket) => {
             controlableCharacters: []
         };
         if (adminConnection) {
-            for(var i of currentEnemies)
-            {
-                user.controlableCharacters.push({ id: crypto.randomUUID(), playerId: playerId, tileRow: i.tileRow, tileCol: i.tileCol, imageName: i.imageName, shareVision: false});
+            for (var i of currentEnemies) {
+                user.controlableCharacters.push({ id: crypto.randomUUID(), playerId: playerId, tileRow: i.tileRow, tileCol: i.tileCol, imageName: i.imageName, shareVision: false });
             }
         } else {
-            user.controlableCharacters.push({ id: crypto.randomUUID(), playerId: playerId, tileRow: spawnData.tileRow, tileCol: spawnData.tileCol, imageName: spawnData.imageName, shareVision: true});
+            user.controlableCharacters.push({ id: crypto.randomUUID(), playerId: playerId, tileRow: spawnData.tileRow, tileCol: spawnData.tileCol, imageName: spawnData.imageName, shareVision: true });
             characterIdx = (characterIdx + 1) % characterSpawnData.length;
         }
 
@@ -60,10 +60,9 @@ io.on('connection', (socket) => {
     if (user.socketIds.length == 1) {
         socket.broadcast.emit('initialize-characters', user.controlableCharacters);
     }
-    
+
     // initialize existing connections to the newly connected client
-    for(let u of userConnections)
-    {
+    for (let u of userConnections) {
         // only spawn a player's characters if they are currently connected
         if (u.socketIds.length > 0) {
             socket.emit('initialize-characters', u.controlableCharacters);
@@ -71,19 +70,17 @@ io.on('connection', (socket) => {
     }
 
     socket.emit('initialize-game-state', {
-        playerData: {id: user.id, admin: adminConnection},
-        mapData: { buffer: currentConfig.mapData, rows: currentConfig.mapHeight, cols: currentConfig.mapWidth },
+        playerData: { id: user.id, admin: adminConnection },
+        mapData: { hexPixels: currentConfig.mapData, rows: currentConfig.mapHeight, cols: currentConfig.mapWidth },
         gameState: gameState
     });
 
     socket.on('disconnect', () => {
         let idx = user.socketIds.findIndex(x => x == socket.id);
-        if (idx != -1)
-        {
+        if (idx != -1) {
             user.socketIds.splice(idx, 1);
-        }   
-        if (user.socketIds.length == 0)
-        {
+        }
+        if (user.socketIds.length == 0) {
             // trigger despawn on all clients, but keep info incase of reconnect
             socket.broadcast.emit('disconnect-user', user.id);
             console.log(`User disconnected from origin: ${ip} with id: ${socket.id} - remembering ${userConnections.length} connections`);
@@ -100,7 +97,7 @@ io.on('connection', (socket) => {
         target.tileRow = clickData.path[0].tileRow;
         target.tileCol = clickData.path[0].tileCol;
 
-        socket.broadcast.emit('move-character', { id: target.id, path: clickData.path } );
+        socket.broadcast.emit('move-character', { id: target.id, path: clickData.path });
     });
 
     socket.on('stopped', (clickData) => {
@@ -121,13 +118,13 @@ io.on('connection', (socket) => {
     socket.on('spawn-minion', (spawnData) => {
         if (!user.admin && user.controlableCharacters.length >= 2) return;
 
-        let spawn = { 
+        let spawn = {
             id: crypto.randomUUID(),
             playerId: spawnData.playerId,
             imageName: spawnData.imageName,
-            tileRow: user.admin ? spawnData.tileRow : user.controlableCharacters[0].tileRow, 
+            tileRow: user.admin ? spawnData.tileRow : user.controlableCharacters[0].tileRow,
             tileCol: user.admin ? spawnData.tileCol : user.controlableCharacters[0].tileCol,
-            shareVision: !user.admin 
+            shareVision: !user.admin
         };
         user.controlableCharacters.push(spawn);
 
@@ -139,16 +136,14 @@ io.on('connection', (socket) => {
         let idx = user.controlableCharacters.findIndex(x => x.id == idData.characterId);
         if (!user.admin && user.controlableCharacters.length == 1) return;
 
-        if (idx != -1)
-        {
+        if (idx != -1) {
             user.controlableCharacters.splice(idx, 1);
             io.sockets.emit('despawn-character', idData.characterId);
         }
     });
 
     socket.on('explored-area', (exploreData) => {
-        if (gameState)
-        {
+        if (gameState) {
             gameState.exploreArea(exploreData.topLeft, exploreData.area);
         }
     });

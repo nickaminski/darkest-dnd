@@ -1,5 +1,5 @@
-import sizeof from 'image-size';
 import fs from 'node:fs';
+import { PNG } from 'pngjs';
 
 export class MapConfig {
     mapName: string;
@@ -7,18 +7,44 @@ export class MapConfig {
     playerSpawns: any[];
     mapWidth?: number;
     mapHeight?: number;
-    mapData?: ArrayBuffer;
+    mapData?: string[];
 
-    static load(config: MapConfig): MapConfig {
-        let path = `src/assets/maps/${config.mapName}`;
-        config.mapData = fs.readFileSync(path);
+    static load(config: MapConfig): Promise<MapConfig> {
+        return new Promise((resolve, reject) => {
+            let path = `src/assets/maps/${config.mapName}`;
 
-        let dimensions = sizeof(path);
-        config.mapWidth = dimensions.width;
-        config.mapHeight = dimensions.height;
-
-        return config;
+            fs.createReadStream(path)
+                .pipe(new PNG())
+                .on("parsed", function () {
+                    let pixels = [];
+                    for (let i = 0; i < this.data.length; i += 4) {
+                        const r = this.data[i];
+                        const g = this.data[i + 1];
+                        const b = this.data[i + 2];
+                        const a = this.data[i + 3];
+                        pixels.push(`${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}${a.toString(16).padStart(2, "0")}`);
+                    }
+                    config.mapData = pixels;
+                    config.mapWidth = this.width;
+                    config.mapHeight = this.height;
+                    resolve(config);
+                });
+        });
     }
+
+    static small: MapConfig = {
+        mapName: 'small.png',
+        enemies: [
+            { imageName: 'bandit_fuselier', tileRow: 3, tileCol: 3 },
+            { imageName: 'bandit_cutthroat', tileRow: 10, tileCol: 10 }
+        ],
+        playerSpawns: [
+            { imageName: 'highwayman', tileRow: 4, tileCol: 2 },
+            { imageName: 'hellion', tileRow: 2, tileCol: 2 },
+            { imageName: 'jester', tileRow: 2, tileCol: 4 },
+            { imageName: 'occultist', tileRow: 4, tileCol: 4 }
+        ]
+    };
 
     static oldRoad: MapConfig = {
         mapName: 'old_road.png',

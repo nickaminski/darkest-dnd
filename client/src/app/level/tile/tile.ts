@@ -37,8 +37,8 @@ export class Tile {
 
     invalidPathTile(): boolean {
         return this.isSolid ||
-               this.paintOverColorHex == PaintColor.Black.hex ||
-               this.paintOverColorHex == PaintColor.Brown.hex ||
-               this.paintOverColorHex == PaintColor.FakeWall.hex;
+            this.paintOverColorHex == PaintColor.Black.hex ||
+            this.paintOverColorHex == PaintColor.Brown.hex ||
+            this.paintOverColorHex == PaintColor.FakeWall.hex;
     }
 }

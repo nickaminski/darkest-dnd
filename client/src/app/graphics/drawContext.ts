@@ -41,14 +41,14 @@ export class DrawContext {
 
     clear() {
         this.#ctx.save();
-        this.#ctx.setTransform(1, 0, 0, 1, 0 ,0);
+        this.#ctx.setTransform(1, 0, 0, 1, 0, 0);
         this.#ctx.clearRect(0, 0, this.width, this.height);
         this.#ctx.restore();
     }
 
     clearBlack() {
         this.#ctx.save();
-        this.#ctx.setTransform(1, 0, 0, 1, 0 ,0);
+        this.#ctx.setTransform(1, 0, 0, 1, 0, 0);
         this.#ctx.fillStyle = 'black';
         this.#ctx.fillRect(0, 0, this.width, this.height);
         this.#ctx.restore();
@@ -74,27 +74,25 @@ export class DrawContext {
         this.ctx.restore();
     }
 
-    drawTile(tileRow: number, tileCol: number, width: number, height: number, tileHex: string, paintOverColorHex: string, brightness: BrightnessLevel){
+    drawTile(tileRow: number, tileCol: number, width: number, height: number, tileHex: string, paintOverColorHex: string, brightness: BrightnessLevel) {
         this.ctx.save();
         if (brightness != BrightnessLevel.Dark) {
             // screen is cleared with black, so we dont need to draw black squares for darkness
-            
-            switch(tileHex)
-            {
+
+            switch (tileHex) {
                 case '000000ff': this.ctx.fillStyle = '#333333ff'; break;
                 case 'ffffffff': this.ctx.fillStyle = '#ffffffff'; break;
+                // default: console.error(`unknown tile hex: ${tileHex} r:${tileRow} c:${tileCol}`);
             }
             this.ctx.strokeRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
             this.ctx.fillRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
 
-            if (paintOverColorHex && brightness)
-            {
+            if (paintOverColorHex && brightness) {
                 this.ctx.fillStyle = `#${paintOverColorHex}`;
                 this.ctx.fillRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
             }
 
-            if (tileHex != '000000ff' && !paintOverColorHex)
-            {
+            if (tileHex != '000000ff' && !paintOverColorHex) {
                 if (brightness == BrightnessLevel.Explored) {
                     this.ctx.fillStyle = '#000000aa';
                     this.ctx.fillRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), width, height);
@@ -120,7 +118,7 @@ export class DrawContext {
         this.ctx.beginPath();
 
         this.ctx.moveTo((path[0].tileCol << Tile.TileSizeShift) + Tile.TileSize / 2, (path[0].tileRow << Tile.TileSizeShift) + Tile.TileSize / 2);
-        for(var i = 1; i < path.length; i++)
+        for (var i = 1; i < path.length; i++)
             this.ctx.lineTo((path[i].tileCol << Tile.TileSizeShift) + Tile.TileSize / 2, (path[i].tileRow << Tile.TileSizeShift) + Tile.TileSize / 2);
 
         this.ctx.stroke();
@@ -140,10 +138,10 @@ export class DrawContext {
         var grd = this.ctx.createRadialGradient(w / 2, h / 2, innerRadius, w / 2, h / 2, outerRadius);
         grd.addColorStop(0, 'rgba(0,0,0,0)');
         grd.addColorStop(1, 'rgba(0,0,0,0.7)');
-        
+
         this.ctx.fillStyle = grd;
         this.ctx.fill();
         this.ctx.restore();
     }
-    
+
 }

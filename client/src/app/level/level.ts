@@ -43,7 +43,6 @@ export class Level {
 
     DEBUG_USE_BRIGHTNESS = true;
     DEBUG_SHOW_TILE_LOC = false;
-    mapImage = new Image();
 
     constructor(mouse: Mouse, socket: Socket) {
         this.foregroundNeedsRedraw = true;
@@ -52,69 +51,53 @@ export class Level {
         this.tileMap = [];
         this.mouse = mouse;
 
-        this.mouse.$mouseClick.subscribe(e=> {            
-            if(this.currentPovCharacter &&
-                this.canCharactersMove && 
-                this.mouse.mousePath && 
-                this.mouse.mousePath.length > 0) 
-                {
-                   var thePath = [...this.mouse.mousePath];
-                   this.currentPovCharacter.currentMovePath = thePath;
-       
-                   socket.emit('click', {id: this.currentPovCharacter.id, path: thePath });
+        this.mouse.$mouseClick.subscribe(e => {
+            if (this.currentPovCharacter &&
+                this.canCharactersMove &&
+                this.mouse.mousePath &&
+                this.mouse.mousePath.length > 0) {
+                var thePath = [...this.mouse.mousePath];
+                this.currentPovCharacter.currentMovePath = thePath;
+
+                socket.emit('click', { id: this.currentPovCharacter.id, path: thePath });
             }
         });
     }
 
-    loadMapData(playerId: string, mapData: ArrayBuffer, gameState: any) {
-        this.mapImage.src = URL.createObjectURL(new Blob([new Uint8Array(mapData)], { type: 'application/octet-stream' }));
-        this.mapImage.onload = () => {
-            this.width = this.mapImage.width;
-            this.height = this.mapImage.height;
+    loadMapData(playerId: string, mapData: any, gameState: any) {
+        this.pixelHexValues = [...mapData.hexPixels];
+        this.width = mapData.cols;
+        this.height = mapData.rows;
 
-            var virtualCanvas = document.createElement('canvas');
-            var context = virtualCanvas.getContext('2d');
-            context.drawImage(this.mapImage, 0, 0);
-            var pixelData = context.getImageData(0, 0, this.width, this.height).data;
-            for(var i = 0; i < pixelData.length / 4; i++) {
-                var r = pixelData[i*4].toString(16).padStart(2, '0');
-                var g = pixelData[i*4+1].toString(16).padStart(2, '0');
-                var b = pixelData[i*4+2].toString(16).padStart(2, '0');
-                var a = pixelData[i*4+3].toString(16).padStart(2, '0');
-                const hexValue = `${r}${g}${b}${a}`;
-                this.pixelHexValues.push(hexValue);
-            }
+        for (var i = 0; i < this.pixelHexValues.length; i++) {
+            var row = Math.floor(i / this.width);
+            var col = i % this.width;
+            var newTile = new Tile(row, col, this.pixelHexValues[i]);
 
-            for (var i = 0; i < this.pixelHexValues.length; i++) {
-                var row = Math.floor(i/this.width);
-                var col = i%this.width;
-                var newTile = new Tile(row, col, this.pixelHexValues[i]);
+            if (!this.tileMap[row]) this.tileMap[row] = [];
 
-                if (!this.tileMap[row]) this.tileMap[row] = [];
-
-                this.tileMap[row][col] = newTile;
-            }
-
-            for (var i = 0; i < this.tileMap.length; i++) {
-                for (var j = 0; j < this.tileMap[0].length; j++) {
-                    this.tileMap[i][j].shouldBeDrawn = this.tileShouldBeDrawn(i, j);
-                }
-            }
-
-            this.loaded = true;
-            this.needsRedraw = true;
-            
-            this.entities.forEach(e => {
-                if (e instanceof Character) {
-                    e.init(this);
-                    e.calculateVision(this.tileMap, e.playerId);
-                }
-            });
-
-            this.loadGameState(playerId, gameState);
-            
-            this.recalculateVision = true;
+            this.tileMap[row][col] = newTile;
         }
+
+        for (var i = 0; i < this.tileMap.length; i++) {
+            for (var j = 0; j < this.tileMap[0].length; j++) {
+                this.tileMap[i][j].shouldBeDrawn = this.tileShouldBeDrawn(i, j);
+            }
+        }
+
+        this.loaded = true;
+        this.needsRedraw = true;
+
+        this.entities.forEach(e => {
+            if (e instanceof Character) {
+                e.init(this);
+                e.calculateVision(this.tileMap, e.playerId);
+            }
+        });
+
+        this.loadGameState(playerId, gameState);
+
+        this.recalculateVision = true;
     }
 
     addEntity(e: Entity) {
@@ -151,22 +134,19 @@ export class Level {
         if (!this.loaded) return;
 
         if (this.recalculateVision) {
-            this.tileMap.forEach(row => row.forEach(col => {col.brightness = 0}));
-            this.entities.forEach(e => {if (e instanceof Character) e.calculateVision(this.tileMap, e.playerId); });
+            this.tileMap.forEach(row => row.forEach(col => { col.brightness = 0 }));
+            this.entities.forEach(e => { if (e instanceof Character) e.calculateVision(this.tileMap, e.playerId); });
             this.recalculateVision = false;
         }
 
         this.entities.forEach(e => e.update(delta));
 
-        if (this.recalculateMousePath)
-        {
+        if (this.recalculateMousePath) {
             this.recalculateMousePath = false;
-            if (this.currentPovCharacter)
-            {
+            if (this.currentPovCharacter) {
                 this.mouse.mousePath = this.findPath(this.currentPovCharacter.tileRow, this.currentPovCharacter.tileCol, this.mouse.tileRow, this.mouse.tileCol);
             }
-            else
-            {
+            else {
                 this.mouse.mousePath = [];
             }
         }
@@ -185,8 +165,9 @@ export class Level {
         for (var y = y0; y < y1 + 1; y++) {
             for (var x = x0; x < x1 + 1; x++) {
                 let tile = this.getTile(y, x);
-                if (tile && tile.shouldBeDrawn)
+                if (tile && tile.shouldBeDrawn) {
                     drawContext.drawTile(y, x, Tile.TileSize, Tile.TileSize, this.getTileHex(y, x), tile?.paintOverColorHex, this.getBrightness(y, x));
+                }
             }
         }
 
@@ -197,14 +178,13 @@ export class Level {
                     drawContext.highlightTile(e.tileRow, e.tileCol, '00ff00ff');
                 } else if (e.playerId == this.currentPovCharacter.playerId) {
                     drawContext.highlightTile(e.tileRow, e.tileCol, '0000ffff');
-                } 
+                }
             }
         });
 
         this.mouse.render(drawContext);
 
-        if (this.DEBUG_SHOW_TILE_LOC)
-        {
+        if (this.DEBUG_SHOW_TILE_LOC) {
             drawContext.ctx.save();
             drawContext.ctx.resetTransform();
             drawContext.ctx.fillStyle = 'gray';
@@ -219,14 +199,12 @@ export class Level {
     }
 
     loadGameState(playerId: string, gameState: any) {
-        if (gameState.freezeCharacterMovement)
-        {
+        if (gameState.freezeCharacterMovement) {
             this.receiveFreeze(playerId);
         }
-        if (this.loaded)
-        {
-            for(let r = 0; r < this.height; r++) {
-                for(let c = 0; c < this.width; c++) {
+        if (this.loaded) {
+            for (let r = 0; r < this.height; r++) {
+                for (let c = 0; c < this.width; c++) {
                     let serverTile = gameState.tiles[r][c];
                     let localTile = this.getTile(r, c);
                     this.paintTile(localTile, serverTile.paintOverColorHex);
@@ -241,10 +219,10 @@ export class Level {
         this.canCharactersMove = (!this.canCharactersMove || this.admin);
         this.drawFreezeVignette = !this.drawFreezeVignette;
 
-        for(let c of this.getPlayerCharacters(playerId)) {
+        for (let c of this.getPlayerCharacters(playerId)) {
             c.freeze();
         }
-        
+
         this.foregroundNeedsRedraw = true;
     }
 
@@ -258,10 +236,10 @@ export class Level {
     }
 
     tileShouldBeDrawn(row: number, col: number): boolean {
-        var up = this.getTile(row-1,col);
-        var down = this.getTile(row+1, col);
-        var left = this.getTile(row, col-1);
-        var right = this.getTile(row, col+1);
+        var up = this.getTile(row - 1, col);
+        var down = this.getTile(row + 1, col);
+        var left = this.getTile(row, col - 1);
+        var right = this.getTile(row, col + 1);
 
         // only care about drawing tiles that we could possibly see
         let upShouldBlockUs = up && up.isSolid && !up.isWindow;
@@ -272,7 +250,9 @@ export class Level {
     }
 
     getTile(row: number, col: number): Tile {
-        if (row < 0 || row >= this.height || col < 0 || col >= this.width) return undefined;
+        if (row < 0 || row >= this.height || col < 0 || col >= this.width) {
+            return undefined;
+        }
         return this.tileMap[row][col];
     }
 
@@ -282,8 +262,7 @@ export class Level {
     }
 
     paintTile(tile: Tile, colorHex: string) {
-        if (tile)
-        {
+        if (tile) {
             tile.paintOverColorHex = colorHex;
         }
     }
@@ -303,26 +282,24 @@ export class Level {
     findPath(startTileRow: number, startTileCol: number, goalTileRow: number, goalTileCol: number): PathfindingNode[] {
         var startTile = this.getTile(startTileRow, startTileCol);
         var goalTile = this.getTile(goalTileRow, goalTileCol);
-        if (goalTile == null || goalTile == undefined || goalTile.isSolid || startTile.isSolid){
+        if (goalTile == null || goalTile == undefined || goalTile.isSolid || startTile.isSolid) {
             return null;
-        } 
+        }
 
         var openList = [];
         var closedList = [];
-        
+
         var dist = this.getDistance(startTileRow, startTileCol, goalTileRow, goalTileCol);
         var current = new PathfindingNode(startTileRow, startTileCol, null, 0, dist);
 
         openList.push(current);
 
-        while(openList.length > 0) 
-        {
+        while (openList.length > 0) {
             openList.sort((a, b) => a.g - b.g);
             current = openList.shift();
-            if (current.tileRow == goalTileRow && current.tileCol == goalTileCol)
-            {
+            if (current.tileRow == goalTileRow && current.tileCol == goalTileCol) {
                 var path = [];
-                while(current.parent != null) {
+                while (current.parent != null) {
                     path.push(current);
                     current = current.parent;
                 }
@@ -338,7 +315,7 @@ export class Level {
                     var tile = this.getTile(current.tileRow + i, current.tileCol + j);
                     if (tile == undefined || tile == null) continue;
                     if (tile.invalidPathTile() || (!tile.explored && !this.admin)) continue;
-                    
+
                     var top = this.getTile(current.tileRow - 1, current.tileCol);
                     var bottom = this.getTile(current.tileRow + 1, current.tileCol);
                     var left = this.getTile(current.tileRow, current.tileCol - 1);
@@ -356,10 +333,10 @@ export class Level {
                     if (i == 1 && j == 1) {
                         if (bottom.invalidPathTile() || right.invalidPathTile()) continue;
                     }
-    
+
                     var gCost = current.g + this.getDistance(current.tileRow, current.tileCol, tile.row, tile.col);
                     var hCost = this.getDistance(tile.row, tile.col, goalTileRow, goalTileCol);
-    
+
                     var node = new PathfindingNode(tile.row, tile.col, current, gCost, hCost);
 
                     if (closedList.find(x => x.tileCol == node.tileCol && x.tileRow == node.tileRow) && gCost >= current.g) continue;
