@@ -30,6 +30,8 @@ export class Level {
     }
 
     public set currentPovCharacter(val: Character) {
+
+        // do this weird double if for selecting/deselecting pov
         if (this._currentPovCharacter) {
             this._currentPovCharacter.pov = false;
         }

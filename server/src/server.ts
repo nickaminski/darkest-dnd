@@ -16,7 +16,7 @@ const io = new Server(server, {
 let userConnections: UserConnection[] = [];
 
 var networkInterfaces = os.networkInterfaces();
-const networkIpAddress = networkInterfaces['Wi-Fi'].find((x: any) => x.family == 'IPv4').address;
+const networkIpAddress = networkInterfaces['Ethernet'].find((x: any) => x.family == 'IPv4').address;
 let characterIdx = 0;
 
 let currentConfig = await MapConfig.load(MapConfig.ruinsLv3);
