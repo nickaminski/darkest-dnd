@@ -2,7 +2,24 @@ import { Game } from "./app/game";
 import { io } from 'socket.io-client';
 
 window.addEventListener('load', function () {
-    const socket = io(`${window.location.hostname}:3000`);
+
+    const storageKey = "reconnect-token";
+    let reconnectToken = localStorage.getItem(storageKey);
+
+    const params = new URLSearchParams(location.search);
+    const adminToken = params.get("admin");
+
+    const socket = io(`${window.location.hostname}:3000`, {
+        auth: {
+            reconnectToken,
+            adminToken
+        }
+    });
+
+    socket.on('assign-reconnect-token', token => {
+        localStorage.setItem(storageKey, token);
+    });
+
     const gameCanvas = document.getElementById('render') as HTMLCanvasElement;
     const foregroundCanvas = document.getElementById('foreground') as HTMLCanvasElement;
     var lastTime = Date.now();

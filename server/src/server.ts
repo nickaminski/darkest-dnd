@@ -1,46 +1,56 @@
 // src/server.ts
 // npx nodemon --exec "npx tsx watch src/server.ts"
+import 'dotenv/config';
 import * as http from 'http';
 import os from "os";
 import { Server } from "socket.io";
 import { UserConnection } from './models/userConnection';
 import { GameState } from './models/gameState';
 import { MapConfig } from './mapConfig';
+import { AppConfig } from "./appConfig";
 
 const server = http.createServer();
-const PORT = process.env.PORT || 3000;
+const PORT = AppConfig.port;
 const io = new Server(server, {
     cors: { origin: '*' }
 });
 
-let userConnections: UserConnection[] = [];
-
 var networkInterfaces = os.networkInterfaces();
 const networkIpAddress = networkInterfaces['Ethernet'].find((x: any) => x.family == 'IPv4').address;
+
+let userConnections = new Map<string, UserConnection>();
+
 let characterIdx = 0;
 
 let currentConfig = await MapConfig.load(MapConfig.ruinsLv3);
 let currentEnemies = currentConfig.enemies;
 let characterSpawnData = currentConfig.playerSpawns;
 
-let gameState = new GameState(currentConfig.mapHeight, currentConfig.mapWidth);
+let gameState = new GameState(currentConfig.mapHeight!, currentConfig.mapWidth!);
+
+console.log(AppConfig);
 
 io.on('connection', (socket) => {
-    const ip = socket.conn.remoteAddress.split(":")[3]; // when behind proxy: socket.handshake.headers['x-forwarded-for']
-    let adminConnection = ip == networkIpAddress;
-    let user = userConnections.find(x => x.ipAddress == ip);
+    let reconnectToken = socket.handshake.auth.reconnectToken as string;
+    const admin = socket.handshake.auth.adminToken === AppConfig.adminPassword;
+
+    if (!reconnectToken) {
+        reconnectToken = crypto.randomUUID();
+        socket.emit('assign-reconnect-token', reconnectToken);
+    }
+    
+    let user = userConnections.get(reconnectToken);
+
     if (!user) {
         // actually a new user connecting for the first time
         let spawnData = characterSpawnData[characterIdx];
         let playerId = crypto.randomUUID();
         user = {
             id: playerId,
-            ipAddress: ip,
             socketIds: [socket.id],
-            admin: adminConnection,
             controlableCharacters: []
         };
-        if (adminConnection) {
+        if (admin) {
             for (var i of currentEnemies) {
                 user.controlableCharacters.push({ id: crypto.randomUUID(), playerId: playerId, tileRow: i.tileRow, tileCol: i.tileCol, imageName: i.imageName, shareVision: false });
             }
@@ -49,12 +59,12 @@ io.on('connection', (socket) => {
             characterIdx = (characterIdx + 1) % characterSpawnData.length;
         }
 
-        userConnections.push(user);
-        console.log(`A user connected from origin: ${ip} with id: ${socket.id}`);
+        userConnections.set(reconnectToken, user);
+        console.log(`A user connected with socket id: ${socket.id}`);
     } else {
         // open another tab after connecting, or re-connect after closing out
         user.socketIds.push(socket.id);
-        console.log(`Duplicate connection from user with origin: ${user.ipAddress} with id: ${socket.id}`);
+        console.log(`Duplicate connection from user with socket id: ${socket.id}`);
     }
 
     if (user.socketIds.length == 1) {
@@ -62,15 +72,15 @@ io.on('connection', (socket) => {
     }
 
     // initialize existing connections to the newly connected client
-    for (let u of userConnections) {
+    for (const [token, user] of userConnections) {
         // only spawn a player's characters if they are currently connected
-        if (u.socketIds.length > 0) {
-            socket.emit('initialize-characters', u.controlableCharacters);
+        if (user.socketIds.length > 0) {
+            socket.emit('initialize-characters', user.controlableCharacters);
         }
     }
 
     socket.emit('initialize-game-state', {
-        playerData: { id: user.id, admin: adminConnection },
+        playerData: { id: user.id, admin: admin },
         mapData: { hexPixels: currentConfig.mapData, rows: currentConfig.mapHeight, cols: currentConfig.mapWidth },
         gameState: gameState
     });
@@ -83,7 +93,7 @@ io.on('connection', (socket) => {
         if (user.socketIds.length == 0) {
             // trigger despawn on all clients, but keep info incase of reconnect
             socket.broadcast.emit('disconnect-user', user.id);
-            console.log(`User disconnected from origin: ${ip} with id: ${socket.id} - remembering ${userConnections.length} connections`);
+            console.log(`User disconnected with socket id: ${socket.id} - remembering ${userConnections.size} connections`);
         }
     });
 
@@ -101,8 +111,13 @@ io.on('connection', (socket) => {
     });
 
     socket.on('stopped', (clickData) => {
+        if (!clickData)
+            return;
+
         // clickData needs ids so players can control different character
         let target = user.controlableCharacters.find(x => x.id == clickData.id);
+        if (!target)
+            return;
 
         target.tileRow = clickData.tileRow;
         target.tileCol = clickData.tileCol;
@@ -116,15 +131,15 @@ io.on('connection', (socket) => {
     });
 
     socket.on('spawn-minion', (spawnData) => {
-        if (!user.admin && user.controlableCharacters.length >= 2) return;
+        if (!admin && user.controlableCharacters.length >= 2) return;
 
         let spawn = {
             id: crypto.randomUUID(),
             playerId: spawnData.playerId,
             imageName: spawnData.imageName,
-            tileRow: user.admin ? spawnData.tileRow : user.controlableCharacters[0].tileRow,
-            tileCol: user.admin ? spawnData.tileCol : user.controlableCharacters[0].tileCol,
-            shareVision: !user.admin
+            tileRow: admin ? spawnData.tileRow : user.controlableCharacters[0].tileRow,
+            tileCol: admin ? spawnData.tileCol : user.controlableCharacters[0].tileCol,
+            shareVision: !admin
         };
         user.controlableCharacters.push(spawn);
 
@@ -134,7 +149,7 @@ io.on('connection', (socket) => {
 
     socket.on('despawn-character', (idData) => {
         let idx = user.controlableCharacters.findIndex(x => x.id == idData.characterId);
-        if (!user.admin && user.controlableCharacters.length == 1) return;
+        if (!admin && user.controlableCharacters.length == 1) return;
 
         if (idx != -1) {
             user.controlableCharacters.splice(idx, 1);
@@ -156,6 +171,8 @@ io.on('connection', (socket) => {
             }
 
             let character = user.controlableCharacters.find(x => x.id == imageData.characterId);
+            if (!character) return; 
+            
             character.imageName = imageData.name;
             character.imageFile = imageData.file;
             socket.broadcast.emit('change-image', imageData);
