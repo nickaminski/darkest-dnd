@@ -112,7 +112,7 @@ export class Game {
         this.handlePlayerControls();
 
         if (this.admin) {
-            this.handleAminControls();
+            this.handleAdminControls();
         }
     }
 
@@ -335,7 +335,7 @@ export class Game {
         });
     }
 
-    handleAminControls(): void {
+    handleAdminControls(): void {
         if (this.keyboard.toggleLights && !this.level.DEBUG_USE_BRIGHTNESS) {
             this.level.DEBUG_USE_BRIGHTNESS = true;
             this.level.needsRedraw = true;

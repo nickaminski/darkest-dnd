@@ -16,7 +16,7 @@ const io = new Server(server, {
 });
 
 var networkInterfaces = os.networkInterfaces();
-const networkIpAddress = networkInterfaces['Ethernet'].find((x: any) => x.family == 'IPv4').address;
+const networkIpAddress = networkInterfaces['Ethernet']!.find((x: any) => x.family == 'IPv4')!.address;
 
 let userConnections = new Map<string, UserConnection>();
 
