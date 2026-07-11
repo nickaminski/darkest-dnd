@@ -5,6 +5,7 @@ module.exports = {
     entry: './src/main.ts',
     module: {
         rules: [
+            { test: /\.css$/i, use: ['style-loader', 'css-loader'] },
             { test: /\.(png|jpe?g|gif|svg)$/i, type: "asset/resource" },
             { test: /\.ts$/, use: 'ts-loader', include: [PATH.resolve(__dirname, 'src')] }
         ]

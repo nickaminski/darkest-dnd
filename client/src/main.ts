@@ -1,5 +1,6 @@
 import { Game } from "./app/game";
 import { io } from 'socket.io-client';
+import './styles/ui.css';
 
 window.addEventListener('load', function () {
 

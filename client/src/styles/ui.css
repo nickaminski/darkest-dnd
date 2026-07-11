@@ -1,0 +1,59 @@
+.ui-panel {
+    position: fixed;
+    display: flex;
+    background-color: lightgrey;
+    overflow: hidden;
+    height: 0;
+    transition: height .2s;
+}
+
+.ui-panel-column {
+    flex-flow: column;
+}
+
+.ui-panel-row {
+    flex-flow: row;
+}
+
+.ui-panel-wrap {
+    flex-wrap: wrap;
+}
+
+.ui-button {
+    cursor: pointer;
+    user-select: none;
+}
+
+.ui-icon-button {
+    width: 60px;
+    height: 60px;
+    margin: 2px;
+    border: solid 3px black;
+}
+
+.ui-circle {
+    border-radius: 50%;
+}
+
+.ui-selected {
+    border-color: green;
+}
+
+.ui-toggle-button {
+    position: fixed;
+    width: 64px;
+    height: 64px;
+    bottom: 16px;
+    background-color: lightgrey;
+}
+
+.ui-paint-swatch {
+    width: 52px;
+    height: 52px;
+    margin: 2px;
+    border: solid 3px;
+}
+
+.ui-upload-button {
+    background-color: green;
+}
