@@ -9,6 +9,7 @@
     "author": "",
     "license": "ISC",
     "devDependencies": {
+        "@types/pngjs": "^6.0.5",
         "bufferutil": "^4.1.0",
         "nodemon": "^3.1.14",
         "ts-loader": "^9.6.2",

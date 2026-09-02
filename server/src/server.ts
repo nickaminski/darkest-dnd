@@ -8,6 +8,7 @@ import { UserConnection } from './models/userConnection';
 import { GameState } from './models/gameState';
 import { MapConfig } from './mapConfig';
 import { AppConfig } from "./appConfig";
+import { ChangeImageModel } from './models/changeImageModel';
 
 const server = http.createServer();
 const PORT = AppConfig.port;
@@ -16,7 +17,10 @@ const io = new Server(server, {
 });
 
 var networkInterfaces = os.networkInterfaces();
-const networkIpAddress = networkInterfaces['Ethernet']!.find((x: any) => x.family == 'IPv4')!.address;
+const networkIpAddress = Object.values(networkInterfaces)
+                               .flatMap(x => x ?? [])
+                               .find(x => x.family === 'IPv4' && !x.internal)
+                                ?.address;
 
 let userConnections = new Map<string, UserConnection>();
 
@@ -126,6 +130,8 @@ io.on('connection', (socket) => {
     });
 
     socket.on('admin-paint', (paintData) => {
+        if (!admin)
+            
         gameState.paintTile(paintData.row, paintData.col, paintData.colorHex);
         socket.broadcast.emit('admin-paint', paintData);
     });
@@ -163,9 +169,9 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('change-image', (imageData) => {
+    socket.on('change-image', async (imageData: ChangeImageModel) => {
         if (imageData) {
-            if (!imageData.fileType.match(/image\/\w*/)) {
+            if (!imageData.fileType.match(/^image\/(png|jpeg|webp|gif)$/)) {
                 console.log(`change-image invalid image: ${imageData.fileType}`);
                 return;
             }
@@ -174,12 +180,14 @@ io.on('connection', (socket) => {
             if (!character) return; 
             
             character.imageName = imageData.name;
-            character.imageFile = imageData.file;
+            character.imagePixels = imageData.imagePixels;
             socket.broadcast.emit('change-image', imageData);
         }
     });
 
     socket.on('admin-freeze-all', () => {
+        if (!admin) return;
+
         gameState.freezeCharacterMovement = !gameState.freezeCharacterMovement;
         socket.broadcast.emit('freeze');
     });

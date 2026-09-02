@@ -215,7 +215,7 @@ export class Game {
         this.playerId = playerData.id;
         this.admin = playerData.admin;
         this.level.admin = playerData.admin;
-        this.level.DEBUG_USE_BRIGHTNESS = !playerData.admin;
+        this.level.DEBUG_USE_BRIGHTNESS = false; //!playerData.admin;
 
         let characters = this.level.getPlayerCharacters(this.playerId);
 
@@ -249,14 +249,17 @@ export class Game {
         this.adminCurrentColorIdx = idx;
     }
 
-    userControlsCallback = (src: string, file: File | string, fileType: string) => {
+    userControlsCallback = async (src: string, file: File | string, fileType: string) => {
         this.level.currentPovCharacter.image.src = src;
         this.setCharacterPortraitButtonImage(src);
 
-        if (file instanceof File)
-            this.socket.emit('change-image', { characterId: this.level.currentPovCharacter.id, file: file, fileType: fileType });
-        else
+        if (file instanceof File) {
+            const pixels = await file.arrayBuffer();
+            this.socket.emit('change-image', { characterId: this.level.currentPovCharacter.id, imagePixels: pixels, fileType: fileType });
+        }
+        else {
             this.socket.emit('change-image', { characterId: this.level.currentPovCharacter.id, name: file, fileType: fileType });
+        }
     }
 
     loadMapData(playerData: any, mapData: any, gameState: any) {

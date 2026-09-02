@@ -5,5 +5,5 @@ export interface CharacterState {
     tileCol: number;
     shareVision: boolean;
     imageName: string;
-    imageFile?: ArrayBuffer;
+    imagePixels?: ArrayBuffer;
 }

@@ -1,10 +1,11 @@
 import fs from 'node:fs';
 import { PNG } from 'pngjs';
+import { SpawnData } from './models/spawnData';
 
 export class MapConfig {
-    mapName: string;
-    enemies: any[];
-    playerSpawns: any[];
+    mapName: string | undefined;
+    enemies: SpawnData[] = [];
+    playerSpawns: SpawnData[] = [];
     mapWidth?: number;
     mapHeight?: number;
     mapData?: string[];
@@ -16,7 +17,7 @@ export class MapConfig {
             fs.createReadStream(path)
                 .pipe(new PNG())
                 .on("parsed", function () {
-                    let pixels = [];
+                    let pixels: string[] = [];
                     for (let i = 0; i < this.data.length; i += 4) {
                         const r = this.data[i];
                         const g = this.data[i + 1];
@@ -28,7 +29,8 @@ export class MapConfig {
                     config.mapWidth = this.width;
                     config.mapHeight = this.height;
                     resolve(config);
-                });
+                })
+                .on("error", reject);
         });
     }
 
