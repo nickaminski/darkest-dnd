@@ -177,9 +177,9 @@ export class Level {
             e.render(drawContext);
             if (e instanceof Character && this.currentPovCharacter) {
                 if (e.id == this.currentPovCharacter.id) {
-                    drawContext.highlightTile(e.tileRow, e.tileCol, '00ff00ff');
+                    drawContext.outlineTile(e.tileRow, e.tileCol, '00ff00ff');
                 } else if (e.playerId == this.currentPovCharacter.playerId) {
-                    drawContext.highlightTile(e.tileRow, e.tileCol, '0000ffff');
+                    drawContext.outlineTile(e.tileRow, e.tileCol, '0000ffff');
                 }
             }
         });

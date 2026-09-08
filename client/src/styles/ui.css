@@ -1,10 +1,25 @@
 .ui-panel {
-    position: fixed;
-    display: flex;
-    background-color: lightgrey;
-    overflow: hidden;
-    height: 0;
-    transition: height .2s;
+    position: absolute;
+
+    max-width: calc(100vw - 20px);
+
+    background: rgba(25, 25, 25, 0.95);
+    color: white;
+
+    /* Content determines height */
+    height: auto;
+    max-height: calc(100vh - 20px);
+
+    overflow-y: auto;
+
+    transform: translateX(calc(-100% - 10px));
+    transition: transform 0.25s ease;
+
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.4);
+}
+
+.ui-panel.open {
+    transform: translateX(0);
 }
 
 .ui-panel-column {
@@ -27,8 +42,8 @@
 .ui-icon-button {
     width: 60px;
     height: 60px;
-    margin: 2px;
-    border: solid 3px black;
+    margin: 8px;
+    cursor: pointer;
 }
 
 .ui-circle {
@@ -44,7 +59,6 @@
     width: 64px;
     height: 64px;
     bottom: 16px;
-    background-color: lightgrey;
 }
 
 .ui-paint-swatch {
@@ -56,4 +70,74 @@
 
 .ui-upload-button {
     background-color: green;
+}
+
+.ui-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px;
+}
+
+.ui-panel-title {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.keyboard-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 300px;
+}
+
+.keyboard-control-row {
+    display: flex;
+    align-items: center;
+
+    min-height: 42px;
+    padding: 6px 8px;
+
+    background: rgba(255, 255, 255, 0.05);
+
+    border-bottom: 2px solid;
+}
+
+.keyboard-control-keys {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    min-width: 100px;
+}
+
+.keyboard-key {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 28px;
+    height: 28px;
+
+    padding: 0 7px;
+
+    box-sizing: border-box;
+
+    color: black;
+    background: #ffffff;
+    border: 1px solid #666;
+    border-radius: 4px;
+
+    font-size: 13px;
+    font-weight: bold;
+
+    box-shadow: 0 2px 0 #111;
+}
+
+.keyboard-control-description {
+    flex: 1;
+
+    padding-left: 10px;
+
+    font-size: 14px;
 }

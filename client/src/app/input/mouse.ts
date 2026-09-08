@@ -55,7 +55,8 @@ export class Mouse {
     public render(drawCtx: DrawContext) {
         if (this.keyboard.isDown("drawPath"))
             drawCtx.drawPath(this.mousePath);
-        
+
+        drawCtx.outlineTile(this.tileRow, this.tileCol, 'ff00ff');
     }
 
     public onMouseMove(e: MouseEvent, level: Level, drawContext: DrawContext, camera: Camera) {

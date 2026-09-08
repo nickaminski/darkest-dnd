@@ -1,19 +1,26 @@
 import { ImageBank } from "../graphics/imageBank";
 import { PaintColor } from "../graphics/paintColor";
+import { Keyboard, KeyboardControl } from "./keyboard";
 
 export class UIFactory {
-    static createAdminControls(adminSpawnableNpcs: string[], adminPaintColors: PaintColor[], npcSpawnIdxCallback: (idx: number)=>void, colorIdxCallback: (idx: number)=>void): void {
+    private static activePanel: HTMLElement | null = null;
+
+    static createAdminControls(adminSpawnableNpcs: string[], adminPaintColors: PaintColor[], keyboard: Keyboard, npcSpawnIdxCallback: (idx: number)=>void, colorIdxCallback: (idx: number)=>void): void {
         let uiContainer = document.getElementById('ui-controls');
         uiContainer.appendChild(this.createAdminNpcPanel(adminSpawnableNpcs, npcSpawnIdxCallback));
         uiContainer.appendChild(this.createAdminNpcButton(adminSpawnableNpcs));
         uiContainer.appendChild(this.createAdminColorPanel(adminPaintColors, colorIdxCallback));
         uiContainer.appendChild(this.createAdminColorButton());
+        uiContainer.appendChild(this.createKeyboardHelp(keyboard, true));
+        uiContainer.appendChild(this.createKeyboardHelpButton());
     }
 
-    static createUserControls(heroPortraitNames: string[], playerBtnSrc: string, portraitCallback: (src: string, file: File | string, fileType: string)=>void): void {
+    static createUserControls(heroPortraitNames: string[], playerBtnSrc: string, keyboard: Keyboard, portraitCallback: (src: string, file: File | string, fileType: string)=>void): void {
         let uiContainer = document.getElementById('ui-controls');
         uiContainer.appendChild(this.createCharacterPortraitButton(playerBtnSrc));
         uiContainer.appendChild(this.createCharacterPortraitPanel(heroPortraitNames, portraitCallback));
+        uiContainer.appendChild(this.createKeyboardHelp(keyboard, false));
+        uiContainer.appendChild(this.createKeyboardHelpButton());
     }
 
     private static createAdminNpcButton(adminSpawnableNpcs: string[]): HTMLImageElement {
@@ -28,28 +35,26 @@ export class UIFactory {
         npcButton.addEventListener('click', e => {
             console.log('clicked admin npc button');
             let npcContainer = document.getElementById('admin-npcs');
-            this.togglePanel(npcContainer, '385px');
+            this.togglePanel(npcContainer);
         });
         return npcButton;
     }
 
     private static createAdminColorButton(): HTMLDivElement {
-        let background = document.createElement('div');
-        background.classList.add('ui-toggle-button');
-        background.style.left = '90px';
-        
         let colorButton = document.createElement('img');
         colorButton.id = 'admin-color-toggle';
         colorButton.role = 'button';
         colorButton.src = ImageBank.getImageUrl('palette');
-        colorButton.classList.add('ui-button', 'ui-icon-button');
+        colorButton.classList.add('ui-button', 'ui-toggle-button');
+
+        colorButton.style.left = '92px';
+        colorButton.style.backgroundColor = 'lightgray';
 
         colorButton.addEventListener('click', e => {
             let colorContainer = document.getElementById('admin-colors');
-            this.togglePanel(colorContainer, '448px');
+            this.togglePanel(colorContainer);
         });
-        background.appendChild(colorButton);
-        return background;
+        return colorButton;
     }
 
     private static createCharacterPortraitButton(playerBtnSrc: string): HTMLImageElement {
@@ -63,18 +68,35 @@ export class UIFactory {
 
         portraitButton.addEventListener('click', e => {
             let portraitContainer = document.getElementById('hero-portraits');
-            this.togglePanel(portraitContainer, '320px');
+            this.togglePanel(portraitContainer);
         });
 
         return portraitButton;
+    }
+
+    private static createKeyboardHelpButton(): HTMLDivElement {
+        
+        let helpButton = document.createElement('img');
+        helpButton.id = 'help-toggle';
+        helpButton.role = 'button';
+        helpButton.src = ImageBank.getImageUrl('help');
+        helpButton.classList.add('ui-button', 'ui-toggle-button');
+
+        helpButton.style.left = '164px';
+        
+        helpButton.addEventListener('click', () => {
+            let helpContainer = document.getElementById('keyboard-help');
+
+            this.togglePanel(helpContainer);
+        });
+
+        return helpButton;
     }
 
     private static createAdminNpcPanel(adminSpawnableNpcs: string[], npcSpawnIdxCallback: (idx: number) => void): HTMLDivElement {
         let npcContainer = document.createElement('div');
         npcContainer.id = 'admin-npcs';
         npcContainer.classList.add('ui-panel', 'ui-panel-column');
-        npcContainer.style.bottom = '84px';
-        npcContainer.style.left = '16px';
         
         adminSpawnableNpcs.forEach((npc, idx) => {
             let button = document.createElement('img');
@@ -108,9 +130,7 @@ export class UIFactory {
         let colorContainer = document.createElement('div');
         colorContainer.id = 'admin-colors';
         colorContainer.classList.add('ui-panel', 'ui-panel-column');
-        
-        colorContainer.style.bottom = '84px';
-        colorContainer.style.left = '90px';
+
 
         for (let c = 0; c < adminPaintColors.length; c++) {
             let color = adminPaintColors[c];
@@ -141,10 +161,8 @@ export class UIFactory {
         let portrait = document.createElement('div');
         portrait.id = 'hero-portraits';
         portrait.classList.add('ui-panel', 'ui-panel-row', 'ui-panel-wrap');
-        
-        portrait.style.width = '256px';
-        portrait.style.bottom = '84px';
-        portrait.style.left = '16px';
+        portrait.style.width = '228px';
+        portrait.style.display = 'flex';
 
         for (let i = 0; i < heroPortraitNames.length; i++) {
             let button = document.createElement('img');
@@ -191,10 +209,106 @@ export class UIFactory {
         return portrait;
     }
 
-    private static togglePanel(panel: HTMLElement, expandedHeight: string) {
-        panel.style.height =
-            panel.style.height === expandedHeight
-                ? "0px"
-                : expandedHeight;
+    private static createKeyboardHelp(keyboard: Keyboard, isAdmin: boolean): HTMLDivElement {
+        let container = document.createElement('div');
+        container.id = 'keyboard-help';
+        container.classList.add('ui-panel');
+
+        let controls = document.createElement('div');
+        controls.classList.add('keyboard-controls');
+
+        for (const control of keyboard.getControls()) {
+
+            if (control.adminOnly && !isAdmin) {
+                continue;
+            }
+
+            let row = this.createKeyboardControlRow(control, keyboard.getBindings(control.id));
+            controls.appendChild(row);
+        }
+
+        container.appendChild(controls);
+
+        return container;
+    }
+
+    private static createKeyboardControlRow(control: KeyboardControl, bindings: string[]): HTMLDivElement {
+        let row = document.createElement('div');
+        row.classList.add('keyboard-control-row');
+
+        let keys = document.createElement('div');
+        keys.classList.add('keyboard-control-keys');
+
+        for (const code of bindings) {
+            let keyElement = document.createElement('span');
+            keyElement.classList.add('keyboard-key');
+            keyElement.textContent = this.getKeyDisplayName(code);
+
+            keys.appendChild(keyElement);
+        }
+
+        let description = document.createElement('div');
+        description.classList.add('keyboard-control-description');
+        description.textContent = control.description;
+
+        row.appendChild(keys);
+        row.appendChild(description);
+
+        return row;
+    }
+
+    private static getKeyDisplayName(code: string): string {
+        switch (code) {
+            case 'ArrowUp':
+                return '↑';
+
+            case 'ArrowDown':
+                return '↓';
+
+            case 'ArrowLeft':
+                return '←';
+
+            case 'ArrowRight':
+                return '→';
+
+            case 'Space':
+                return 'Space';
+
+            case 'Escape':
+                return 'Esc';
+
+            default:
+                if (code.startsWith('Key')) {
+                    return code.substring(3);
+                }
+
+                if (code.startsWith('Digit')) {
+                    return code.substring(5);
+                }
+
+                return code;
+        }
+    }
+
+    private static togglePanel(panel: HTMLElement | null) {
+        if (!panel) {
+            return;
+        }
+
+        // Clicking the button for the currently open panel closes it.
+        if (this.activePanel === panel) {
+            panel.classList.remove('open');
+            this.activePanel = null;
+            return;
+        }
+
+        // Close any currently open panel.
+        if (this.activePanel) {
+            this.activePanel.classList.remove('open');
+        }
+
+        // Open the requested panel.
+        panel.classList.add('open');
+        this.activePanel = panel;
     }
 }

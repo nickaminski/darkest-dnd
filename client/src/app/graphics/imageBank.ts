@@ -45,6 +45,7 @@ import collector from '../../assets/tokens/Collector.png';
 import prophet from '../../assets/tokens/Prophet.png';
 import crone from '../../assets/tokens/Crone.png';
 
+import help from '../../assets/icons/help.png';
 import palette from '../../assets/icons/palette.svg';
 
 export class ImageBank {
@@ -97,6 +98,7 @@ export class ImageBank {
             case 'prophet': return prophet;
             case 'palette': return palette;
             case 'crone': return crone;
+            case 'help': return help;
             default: return ancestor;
         }
     }

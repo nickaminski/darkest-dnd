@@ -130,7 +130,7 @@ export class Game {
         this.running = true;
     }
 
-    cyclePov(): void {
+    selectPov(): void {
         let npcs = this.level.entities.filter(x => x instanceof Character && x.playerId == this.playerId) as Character[];
         if (npcs.length == 0) return;
 
@@ -146,8 +146,8 @@ export class Game {
     }
 
     handlePlayerControls() {
-        if (this.keyboard.wasPressed("cyclePov")) {
-            this.cyclePov();
+        if (this.keyboard.wasPressed("selectPov")) {
+            this.selectPov();
         }
         if (this.keyboard.wasPressed("removeCharacter")) {
             if (this.admin || this.level.getPlayerCharacters(this.playerId).length > 0) {
@@ -213,7 +213,7 @@ export class Game {
         this.playerId = playerData.id;
         this.admin = playerData.admin;
         this.level.admin = playerData.admin;
-        this.level.DEBUG_USE_BRIGHTNESS = false; //!playerData.admin;
+        this.level.DEBUG_USE_BRIGHTNESS = !playerData.admin;
 
         let characters = this.level.getPlayerCharacters(this.playerId);
 
@@ -230,11 +230,13 @@ export class Game {
         if (playerData.admin) {
             UIFactory.createAdminControls(this.adminSpawnableNpcs,
                 this.adminPaintColors,
+                this.keyboard,
                 this.updateNpcSpawnIdx,
                 this.updateColorIdx);
         } else {
             UIFactory.createUserControls(this.heroPortraitNames,
                 this.playerBtnSrc,
+                this.keyboard,
                 this.userControlsCallback);
         }
     }

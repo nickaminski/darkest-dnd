@@ -67,7 +67,7 @@ export class DrawContext {
         this.#ctx.setTransform(t.a, 0, 0, t.d, tx, ty);
     }
 
-    highlightTile(tileRow: number, tileCol: number, colorHex: string) {
+    outlineTile(tileRow: number, tileCol: number, colorHex: string) {
         this.ctx.save();
         this.ctx.strokeStyle = `#${colorHex}`;
         this.ctx.strokeRect((tileCol << Tile.TileSizeShift), (tileRow << Tile.TileSizeShift), Tile.TileSize, Tile.TileSize);

@@ -28,28 +28,28 @@ export class Keyboard {
             id: 'moveRight',
             defaultCodes: ['KeyD', 'ArrowRight'],
             displayName: 'Move Right',
-            description: 'Move your character right'
+            description: 'Move camera right'
         },
 
         {
             id: 'moveLeft',
             defaultCodes: ['KeyA', 'ArrowLeft'],
             displayName: 'Move Left',
-            description: 'Move your character left'
+            description: 'Move camera left'
         },
 
         {
             id: 'moveUp',
             defaultCodes: ['KeyW', 'ArrowUp'],
             displayName: 'Move Up',
-            description: 'Move your character up'
+            description: 'Move camera up'
         },
 
         {
             id: 'moveDown',
             defaultCodes: ['KeyS', 'ArrowDown'],
             displayName: 'Move Down',
-            description: 'Move your character down'
+            description: 'Move camera down'
         },
 
         {
@@ -70,14 +70,15 @@ export class Keyboard {
             id: 'toggleLights',
             defaultCodes: ['KeyL'],
             displayName: 'Toggle Lights',
-            description: 'Toggle your character lights'
+            description: 'Toggle lights',
+            adminOnly: true
         },
 
         {
-            id: 'cyclePov',
+            id: 'selectPov',
             defaultCodes: ['KeyF'],
-            displayName: 'Cycle POV',
-            description: 'Cycle through available points of view'
+            displayName: 'Select POV',
+            description: 'Select hovered character'
         },
 
         {
@@ -92,7 +93,7 @@ export class Keyboard {
             id: 'placeColor',
             defaultCodes: ['KeyC'],
             displayName: 'Place Color',
-            description: 'Paint the selected tile',
+            description: 'Paint the hovered tile',
             adminOnly: true
         },
 
@@ -200,9 +201,7 @@ export class Keyboard {
      * Get the currently assigned keys for a control.
      */
     public getBindings(controlId: string): string[] {
-        return [
-            ...(this.bindings.get(controlId) ?? [])
-        ];
+        return [...(this.bindings.get(controlId) ?? [])];
     }
 
     /**
@@ -212,6 +211,10 @@ export class Keyboard {
         return Keyboard.controls.find(
             control => control.id === controlId
         );
+    }
+
+    public getControls(): KeyboardControl[] {
+        return [...Keyboard.controls];
     }
 
     /**
