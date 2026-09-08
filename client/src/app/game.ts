@@ -1,7 +1,6 @@
 import { DrawContext } from './graphics/drawContext';
 import { Mouse } from './input/mouse';
 import { Level } from './level/level';
-import { Keyboard } from './input/keyboard';
 import { Camera } from './entity/camera';
 import { Character } from './entity/character';
 
@@ -9,6 +8,7 @@ import { Socket } from 'socket.io-client';
 import { PaintColor } from './graphics/paintColor';
 import { ImageBank } from './graphics/imageBank';
 import { UIFactory } from './input/uiFactory';
+import { Keyboard } from './input/keyboard';
 
 export class Game {
     socket: Socket;
@@ -114,6 +114,7 @@ export class Game {
         if (this.admin) {
             this.handleAdminControls();
         }
+        this.keyboard.endFrame();
     }
 
     render(): void {
@@ -145,18 +146,15 @@ export class Game {
     }
 
     handlePlayerControls() {
-        if (this.keyboard.cyclePov && !this.keyboard.didCycle) {
-            this.keyboard.didCycle = true;
+        if (this.keyboard.wasPressed("cyclePov")) {
             this.cyclePov();
         }
-        if (this.keyboard.removeCharacter && !this.keyboard.didCycle) {
-            this.keyboard.didCycle = true;
+        if (this.keyboard.wasPressed("removeCharacter")) {
             if (this.admin || this.level.getPlayerCharacters(this.playerId).length > 0) {
                 this.removePovCharacter();
             }
         }
-        if (this.keyboard.placeNpc && !this.keyboard.didCycle) {
-            this.keyboard.didCycle = true;
+        if (this.keyboard.wasPressed("placeNpc")) {
             this.placeMinion();
         }
     }
@@ -339,32 +337,28 @@ export class Game {
     }
 
     handleAdminControls(): void {
-        if (this.keyboard.toggleLights && !this.level.DEBUG_USE_BRIGHTNESS) {
+        if (this.keyboard.isDown("toggleLights") && !this.level.DEBUG_USE_BRIGHTNESS) {
             this.level.DEBUG_USE_BRIGHTNESS = true;
             this.level.needsRedraw = true;
         }
-        else if (!this.keyboard.toggleLights && this.level.DEBUG_USE_BRIGHTNESS) {
+        else if (!this.keyboard.isDown("toggleLights") && this.level.DEBUG_USE_BRIGHTNESS) {
             this.level.DEBUG_USE_BRIGHTNESS = false;
             this.level.needsRedraw = true;
         }
 
-        if (this.keyboard.cycleColor && !this.keyboard.didCycle) {
-            this.keyboard.didCycle = true;
+        if (this.keyboard.wasPressed("cycleColor")) {
             this.adminCycleColor();
         }
 
-        if (this.keyboard.placeColor && !this.keyboard.didCycle) {
-            this.keyboard.didCycle = true;
+        if (this.keyboard.wasPressed("placeColor")) {
             this.adminPlaceColor();
         }
 
-        if (this.keyboard.cycleNpc && !this.keyboard.didCycle) {
-            this.keyboard.didCycle = true;
+        if (this.keyboard.wasPressed("cycleNpc")) {
             this.adminCycleNpcs();
         }
 
-        if (this.keyboard.freezeCharacterMovement && !this.keyboard.didCycle) {
-            this.keyboard.didCycle = true;
+        if (this.keyboard.wasPressed("freezeCharacterMovement")) {
             this.adminFreezeCharacterMovement();
         }
     }

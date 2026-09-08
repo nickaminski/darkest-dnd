@@ -2,9 +2,9 @@ import { Observable, Subject } from "rxjs";
 import { DrawContext } from "../graphics/drawContext";
 import { Level } from "../level/level";
 import { PathfindingNode } from "../level/pathfindingNode";
-import { Keyboard } from "./keyboard";
 import { Camera } from "../entity/camera";
 import { Tile } from "../level/tile/tile";
+import { Keyboard } from "./keyboard";
 
 export class Mouse {
 
@@ -53,7 +53,7 @@ export class Mouse {
     }
 
     public render(drawCtx: DrawContext) {
-        if (this.keyboard.drawPath)
+        if (this.keyboard.isDown("drawPath"))
             drawCtx.drawPath(this.mousePath);
         
     }

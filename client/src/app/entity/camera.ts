@@ -30,16 +30,16 @@ export class Camera {
         let dx = 0;
         let dy = 0;
 
-        if (this.input.moveUp) {
+        if (this.input.isDown("moveUp")) {
             dy += this.speed * delta * this.drawCtx.scale;
         }
-        if (this.input.moveDown) {
+        if (this.input.isDown("moveDown")) {
             dy -= this.speed * delta * this.drawCtx.scale;
         }
-        if (this.input.moveLeft) {
+        if (this.input.isDown("moveLeft")) {
             dx += this.speed * delta * this.drawCtx.scale;
         }
-        if (this.input.moveRight) {
+        if (this.input.isDown("moveRight")) {
             dx -= this.speed * delta * this.drawCtx.scale;
         }
 

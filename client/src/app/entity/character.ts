@@ -1,12 +1,12 @@
 import { Socket } from "socket.io-client";
 import { DrawContext } from "../graphics/drawContext";
-import { Keyboard } from "../input/keyboard";
 import { Level } from "../level/level";
 import { PathfindingNode } from "../level/pathfindingNode";
 import { BrightnessLevel } from "../level/tile/brightness";
 import { Tile } from "../level/tile/tile";
 import { Entity } from "./entity";
 import { ImageBank } from "../graphics/imageBank";
+import { Keyboard } from "../input/keyboard";
 
 export class Character implements Entity {
     id: string;
@@ -51,7 +51,7 @@ export class Character implements Entity {
 
     update(delta: number) {
         if (this.pov) {
-            if (this.keyboard.stopCharacterMovement && this.currentMovePath?.length > 0) {
+            if (this.keyboard.wasPressed("stopCharacterMovement") && this.currentMovePath?.length > 0) {
                 this.freeze();
             }
         }
