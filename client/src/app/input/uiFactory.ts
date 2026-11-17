@@ -33,7 +33,6 @@ export class UIFactory {
         npcButton.style.left = '16px';
 
         npcButton.addEventListener('click', e => {
-            console.log('clicked admin npc button');
             let npcContainer = document.getElementById('admin-npcs');
             this.togglePanel(npcContainer);
         });
@@ -130,7 +129,6 @@ export class UIFactory {
         let colorContainer = document.createElement('div');
         colorContainer.id = 'admin-colors';
         colorContainer.classList.add('ui-panel', 'ui-panel-column');
-
 
         for (let c = 0; c < adminPaintColors.length; c++) {
             let color = adminPaintColors[c];

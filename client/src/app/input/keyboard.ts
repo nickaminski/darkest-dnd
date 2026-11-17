@@ -56,7 +56,7 @@ export class Keyboard {
             id: 'drawPath',
             defaultCodes: ['KeyZ'],
             displayName: 'Draw Path',
-            description: 'Draw a movement path'
+            description: '(Hold) Draw a movement path'
         },
 
         {

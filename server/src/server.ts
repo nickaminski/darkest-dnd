@@ -26,7 +26,7 @@ let userConnections = new Map<string, UserConnection>();
 
 let characterIdx = 0;
 
-let currentConfig = await MapConfig.load(MapConfig.ruinsLv3);
+let currentConfig = await MapConfig.load(MapConfig.ruinsLv4);
 let currentEnemies = currentConfig.enemies;
 let characterSpawnData = currentConfig.playerSpawns;
 
@@ -130,7 +130,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('admin-paint', (paintData) => {
-        if (!admin)
+        if (!admin) return;
             
         gameState.paintTile(paintData.row, paintData.col, paintData.colorHex);
         socket.broadcast.emit('admin-paint', paintData);

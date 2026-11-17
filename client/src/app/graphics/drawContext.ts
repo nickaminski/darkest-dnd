@@ -136,8 +136,8 @@ export class DrawContext {
         let outerRadius = w * 0.5;
         let innerRadius = w * 0.2;
         var grd = this.ctx.createRadialGradient(w / 2, h / 2, innerRadius, w / 2, h / 2, outerRadius);
-        grd.addColorStop(0, 'rgba(0,0,0,0)');
-        grd.addColorStop(1, 'rgba(0,0,0,0.7)');
+        grd.addColorStop(0, 'rgba(0, 46, 229, 0.2)');
+        grd.addColorStop(1, 'rgba(0, 118, 222, 0.7)');
 
         this.ctx.fillStyle = grd;
         this.ctx.fill();

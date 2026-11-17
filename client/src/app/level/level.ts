@@ -204,6 +204,7 @@ export class Level {
         if (gameState.freezeCharacterMovement) {
             this.receiveFreeze(playerId);
         }
+        
         if (this.loaded) {
             for (let r = 0; r < this.height; r++) {
                 for (let c = 0; c < this.width; c++) {
