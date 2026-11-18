@@ -117,7 +117,7 @@ export class Keyboard {
             defaultCodes: ['KeyV'],
             displayName: 'Place NPC',
             description: 'Place an NPC',
-            adminOnly: true
+            adminOnly: false
         },
 
         {

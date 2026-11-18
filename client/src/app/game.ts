@@ -322,11 +322,11 @@ export class Game {
             }
         });
 
-        this.socket.on('change-image', (imageData: { characterId: string, file: ArrayBuffer, name: string }) => {
+        this.socket.on('change-image', (imageData: { characterId: string, imagePixels: ArrayBuffer, name: string }) => {
             let entity = this.level.getCharacter(imageData.characterId);
             if (entity) {
-                if (imageData.file) {
-                    entity.image.src = URL.createObjectURL(new Blob([new Uint8Array(imageData.file)], { type: 'application/octet-stream' }));
+                if (imageData.imagePixels) {
+                    entity.image.src = URL.createObjectURL(new Blob([new Uint8Array(imageData.imagePixels)], { type: 'application/octet-stream' }));
                 }
                 else if (imageData.name)
                     entity.image.src = ImageBank.getImageUrl(imageData.name);
