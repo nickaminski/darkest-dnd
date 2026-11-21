@@ -57,12 +57,16 @@ export class Game {
 
     adminCurrentNpcSpawnIdx: number = 0;
     adminSpawnableNpcs = [
-        'slime',
-        'large_slime',
         'bone_soldier',
-        'collected_rogue',
-        'collected_cleric',
-        'collected_warrior'
+        'bone_defender',
+        'bone_arbalist',
+        'bone_courtier',
+        'bandit_bloodletter',
+        'bandit_fuselier',
+        'bandit_cutthroat',
+        'madman',
+        'cultist_brawler',
+        'cultist_acolyte'
     ];
 
     public set width(newVal: number) {

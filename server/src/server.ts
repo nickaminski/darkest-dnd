@@ -26,7 +26,7 @@ let userConnections = new Map<string, UserConnection>();
 
 let characterIdx = 0;
 
-let currentConfig = await MapConfig.load(MapConfig.ruinsLv4);
+let currentConfig = await MapConfig.load(MapConfig.graveyard);
 let currentEnemies = currentConfig.enemies;
 let characterSpawnData = currentConfig.playerSpawns;
 

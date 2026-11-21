@@ -139,4 +139,36 @@ export class MapConfig {
             { imageName: 'occultist', tileRow: 4, tileCol: 61 }
         ]
     };
+
+    static graveyard = {
+        mapName: 'graveyard.png',
+        enemies: [],
+        playerSpawns: [
+            { imageName: 'highwayman', tileRow: 20, tileCol: 16 },
+            { imageName: 'hellion', tileRow: 20, tileCol: 18 },
+            { imageName: 'jester', tileRow: 20, tileCol: 20 }
+        ]
+    };
+
+    static ritualChamber = {
+        mapName: 'ritual_chamber.png',
+        enemies: [],
+        playerSpawns: [
+            { imageName: 'highwayman', tileRow: 26, tileCol: 13 },
+            { imageName: 'hellion', tileRow: 26, tileCol: 14 },
+            { imageName: 'jester', tileRow: 26, tileCol: 15 }
+        ]
+    };
+
+    static prophetBossFight = {
+        mapName: 'prophet.png',
+        enemies: [
+            { imageName: 'prophet', tileRow: 14, tileCol: 9 }
+        ],
+        playerSpawns: [
+            { imageName: 'highwayman', tileRow: 28, tileCol: 13 },
+            { imageName: 'hellion', tileRow: 28, tileCol: 15 },
+            { imageName: 'jester', tileRow: 28, tileCol: 17 }
+        ]
+    };
 }
